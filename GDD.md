@@ -1,6 +1,6 @@
 <!-- 
   ╔══════════════════════════════════════════════════════════════════╗
-  ║  BLOCKS — Game Design Document Template v2.0                    ║
+  ║  BL0CKS — Game Design Document Template v2.0                    ║
   ║                                                                  ║
   ║  HOW TO USE THIS TEMPLATE:                                       ║
   ║  1. Fork/clone this repository                                   ║
@@ -27,7 +27,7 @@
   ╚══════════════════════════════════════════════════════════════════╝
 -->
 
-# BLOCKS — Game Design Document v2.0
+# BL0CKS — Game Design Document v2.0
 
 > **Status:** Active Development  
 > **Version:** 2.0  
@@ -67,13 +67,13 @@
 
 *From the designer's chair —*
 
-BLOCKS is not a game about crime. It is a game about **trust** — and the extraordinary cost of misplacing it.
+BL0CKS is not a game about crime. It is a game about **trust** — and the extraordinary cost of misplacing it.
 
-Set against the hyper-specific geography of Chicago's South Side — real cross streets, real neighborhood names, fictionalized but grounded faction structures — BLOCKS asks players to manage alliances, information, and loyalty in a world where everyone is playing their own game simultaneously.
+Set against the hyper-specific geography of Chicago's South Side — real cross streets, real neighborhood names, fictionalized but grounded faction structures — BL0CKS asks players to manage alliances, information, and loyalty in a world where everyone is playing their own game simultaneously.
 
-What makes BLOCKS structurally unique is that it is the first strategy card game built natively on **Markdown files**, driven by a large language model, and architected to run on any major AI provider the player chooses to bring. The game knows what model it is running on. It adapts. It improves with the model's capabilities. It rewards players who invest in better AI with richer, more complex narrative experiences.
+What makes BL0CKS structurally unique is that it is the first strategy card game built natively on **Markdown files**, driven by a large language model, and architected to run on any major AI provider the player chooses to bring. The game knows what model it is running on. It adapts. It improves with the model's capabilities. It rewards players who invest in better AI with richer, more complex narrative experiences.
 
-The second hook — and the one that will make this **viral** — is the Card Creation Engine. BLOCKS is not just a game. It is a **game factory**. Players will clone the engine, swap the world files, and rebuild it as their own. The cultural surface is infinite. The engine is the product.
+The second hook — and the one that will make this **viral** — is the Card Creation Engine. BL0CKS is not just a game. It is a **game factory**. Players will clone the engine, swap the world files, and rebuild it as their own. The cultural surface is infinite. The engine is the product.
 
 > **Design North Star:** Every mechanic must serve one of three pillars: **Territory, Trust, or Time.** If a card, event, or system does not touch at least one pillar, it does not belong in the game.
 
@@ -181,7 +181,7 @@ Every People Card has two layers:
 
 The AI generates the hidden layer from the character's Markdown template at session start. **No two sessions produce identical character states.** Players cannot memorize the game — they must learn to read it.
 
-> **Designer Note:** The hidden stat is what separates BLOCKS from Reigns. In Reigns, you react to information. In BLOCKS, you are always operating on incomplete information — and your ability to handle that gap is the skill being tested.
+> **Designer Note:** The hidden stat is what separates BL0CKS from Reigns. In Reigns, you react to information. In BL0CKS, you are always operating on incomplete information — and your ability to handle that gap is the skill being tested.
 
 ### 4.3 Core Mechanic Loop
 
@@ -325,7 +325,7 @@ Difficulty is **cloud-resolved**, not locally determined. The JWT payload return
 
 ### 6.1 Model Router
 
-BLOCKS routes all AI calls through a provider-specific adapter based on the player's API key. Each adapter `.md` file defines prompt formatting, token strategy, and capability flags for that model.
+BL0CKS routes all AI calls through a provider-specific adapter based on the player's API key. Each adapter `.md` file defines prompt formatting, token strategy, and capability flags for that model.
 
 ```
 /engine/adapters/
@@ -405,7 +405,7 @@ DLC packs stream from CDN gated by JWT scope
 
 ### 7.1 Overview
 
-The Card Creation Engine is the **platform differentiator** — it transforms BLOCKS from a game into a game factory. Any player can describe a card in natural language and the AI autofills a complete, playable card with hidden stats, art prompt, and decision logic.
+The Card Creation Engine is the **platform differentiator** — it transforms BL0CKS from a game into a game factory. Any player can describe a card in natural language and the AI autofills a complete, playable card with hidden stats, art prompt, and decision logic.
 
 Requires API key. This is the primary driver of API-key-gated engagement.
 
@@ -563,7 +563,7 @@ POST /api/mint-achievement {
         ↓
 Server verifies session fingerprint against achievement log
         ↓
-Minting call sent from BLOCKS cloud wallet → smart contract
+Minting call sent from BL0CKS cloud wallet → smart contract
         ↓
 NFT minted on Base (Coinbase L2)
         ↓
@@ -611,7 +611,7 @@ When a creator publishes a card pack:
 | Threshold | Reward | NFT Impact |
 |---|---|---|
 | 50 upvotes | Listed in Community Registry — searchable in-game | None |
-| 250 upvotes | Featured on New Blocks discovery screen | None |
+| 250 upvotes | Featured on New Bl0cks discovery screen | None |
 | 1,000 upvotes | Bundled as optional DLC in base game update | The Commission NFT mints to creator |
 | 5,000 upvotes | Eligible for paid pack listing with 70% rev share | None additional |
 | 10,000 downloads | Legend NFT auto-mints to creator | Legend NFT |
@@ -644,7 +644,7 @@ When a creator publishes a card pack:
 | Season Pass | Mechanic DLC + seasonal events bundle | Per season |
 | Creator Marketplace | Commission on premium pack sales | Phase 5 |
 
-> **Provider Pitch:** BLOCKS delivers high-intent API activations to a dev-adjacent audience. Every player's first action is entering an API key. The audience skews toward developers and early adopters — exactly the users providers want to acquire. A co-branded Edition exclusive arc is a measurable API acquisition channel dressed as a game.
+> **Provider Pitch:** BL0CKS delivers high-intent API activations to a dev-adjacent audience. Every player's first action is entering an API key. The audience skews toward developers and early adopters — exactly the users providers want to acquire. A co-branded Edition exclusive arc is a measurable API acquisition channel dressed as a game.
 
 ---
 
@@ -914,7 +914,7 @@ When a creator publishes a card pack:
 
 ```
 ┌───────────────────────────────────────┐
-│  [≡]  BLOCKS   Woodlawn · Lv 5   [●] │
+│  [≡]  BL0CKS   Woodlawn · Lv 5   [●] │
 │       [MAP]      [CLOCK]   [PROFILE]  │
 └───────────────────────────────────────┘
 ```
@@ -929,7 +929,7 @@ When a creator publishes a card pack:
 
 ```
 ┌───────────────────────────────────────┐  ← 390 × 844px
-│  [≡]  BLOCKS   Woodlawn · Lv 5   [●] │  Zone 1: Nav — 56px
+│  [≡]  BL0CKS   Woodlawn · Lv 5   [●] │  Zone 1: Nav — 56px
 ├───────────────────────────────────────┤
 │  ┌─────────────────────────────────┐  │  Zone 2: Event Ticker — 44px
 │  │  POLICE SCANNER   ● ACTIVE      │  │  bg: #1A1A2E
@@ -1380,7 +1380,7 @@ The following require resolution before Phase 2 development gates open:
 
 ---
 
-*End of Document — BLOCKS GDD v2.0*
+*End of Document — BL0CKS GDD v2.0*
 *Ernesto "Beats" Rodriguez · March 2026 · Confidential*
 
 ---

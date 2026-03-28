@@ -1,6 +1,6 @@
 <div align="center">
 
-# B L O C K S
+# B L 0 C K S
 
 ### Territory. Trust. Time.
 
@@ -20,9 +20,9 @@
 
 ---
 
-## What Is BLOCKS?
+## What Is BL0CKS?
 
-BLOCKS is a strategy card game set on the streets of Chicago's South Side. You play as a rising figure navigating a world of shifting alliances, hidden agendas, and rival factions — all fighting for control of the same territory.
+BL0CKS is a strategy card game set on the streets of Chicago's South Side. You play as a rising figure navigating a world of shifting alliances, hidden agendas, and rival factions — all fighting for control of the same territory.
 
 Every character you meet has a face they show you — and a truth they're hiding.
 
@@ -44,11 +44,11 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 
 ---
 
-## What Makes BLOCKS Different
+## What Makes BL0CKS Different
 
 ### 🤖 Powered By Your AI
 
-BLOCKS doesn't lock you into one AI service. **You bring your own.** Connect your Claude, Gemini, or ChatGPT account and the game adapts to your model's strengths. Better AI means deeper stories, smarter characters, and more unpredictable betrayals.
+BL0CKS doesn't lock you into one AI service. **You bring your own.** Connect your Claude, Gemini, or ChatGPT account and the game adapts to your model's strengths. Better AI means deeper stories, smarter characters, and more unpredictable betrayals.
 
 Sign in with your AI provider or paste an API key — either way, you're in.
 
@@ -58,7 +58,7 @@ The AI generates hidden character motives, secret allegiances, and betrayal cond
 
 ### 🛠️ Build Your Own Cards
 
-BLOCKS isn't just a game — it's a **game factory**. Describe a character in plain English and the AI builds a complete, playable card with hidden stats, decision scenarios, and custom artwork. Bundle your cards into packs. Share them with the community. See what others have built.
+BL0CKS isn't just a game — it's a **game factory**. Describe a character in plain English and the AI builds a complete, playable card with hidden stats, decision scenarios, and custom artwork. Bundle your cards into packs. Share them with the community. See what others have built.
 
 ### 🌍 Fork the Whole World
 
@@ -96,7 +96,7 @@ Every mechanic in the game serves one of three pillars. If it doesn't touch at l
 
 ## Coming Soon
 
-BLOCKS is currently in active development. Here's what's on the roadmap:
+BL0CKS is currently in active development. Here's what's on the roadmap:
 
 - [x] Game Design Document v2.0 — complete
 - [ ] Core engine — Markdown parser, card renderer, AI model router
@@ -111,7 +111,7 @@ BLOCKS is currently in active development. Here's what's on the roadmap:
 
 ## For Developers & Creators
 
-BLOCKS is built on **Markdown files**. Every card, every character, every level is a `.md` file that the AI reads and brings to life. The entire game world is open and forkable.
+BL0CKS is built on **Markdown files**. Every card, every character, every level is a `.md` file that the AI reads and brings to life. The entire game world is open and forkable.
 
 Want to build your own version? Clone the repo, swap the world files, keep the engine.
 
@@ -128,7 +128,7 @@ Full architecture details are in the [Game Design Document](GDD.md).
 
 <div align="center">
 
-### 🔴 BLOCKS — Coming 2026
+### 🔴 BL0CKS — Coming 2026
 
 **A game about trust in a world where everyone's playing their own game.**
 
