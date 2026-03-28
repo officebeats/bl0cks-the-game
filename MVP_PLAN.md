@@ -248,12 +248,15 @@ npcs_in_play: 4
 
 ## Provider-Specific Considerations
 
-The system prompt must work across AI providers. Each has different strengths:
+The system prompt must work across AI providers. Each has different strengths. **You can get your free API key at these direct links:**
+- **Google AI Studio (Gemini):** [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+- **Anthropic Console (Claude):** [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys)
+- **OpenAI Platform (ChatGPT):** [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
 
 | Provider | Context Window | Strength | Known Limitation | Workaround |
 |---|---|---|---|---|
 | Claude (Sonnet/Opus) | 200K tokens | Best at deception modeling, hidden stat consistency | May over-narrate | Add "keep responses concise" in prompt |
-| Gemini (Pro/Ultra) | 1M+ tokens | Can hold entire game + all cards in context | May lose state structure | Reinforce state block format every 5 turns |
+| Gemini (Pro) | 1M+ tokens | Can hold entire game + all cards in context. | `gemini-1.5-pro` may throw a "not found" error | Must use `gemini-1.5-pro-latest` or `gemini-1.5-pro-002` |
 | ChatGPT (GPT-4o) | 128K tokens | Strong structured output, follows format specs | May reveal hidden stats accidentally | Add explicit "NEVER reveal hidden stats" rule |
 | Ollama / Local | Varies (4K-32K) | Free, offline | Small context = can't hold full game | Strip to essential prompt + current level only |
 

@@ -58,6 +58,11 @@ BL0CKS doesn't lock you into one AI service. **You bring your own.** Connect you
 
 Sign in with your AI provider or paste an API key — either way, you're in.
 
+> **🔑 How to get your API Key (It's free to start):**
+> - **Google Gemini:** Get your key at [Google AI Studio](https://aistudio.google.com/app/apikey). *(Note: If you get a "model not found" error, make sure you are using `gemini-1.5-pro-latest` or `gemini-1.5-pro-002` as your model string).*
+> - **Anthropic Claude:** Get your key at [Anthropic Console](https://console.anthropic.com/settings/keys).
+> - **OpenAI ChatGPT:** Get your key at [OpenAI Platform](https://platform.openai.com/api-keys).
+
 ### 🎴 No Two Games Are The Same
 
 The AI generates hidden character motives, secret allegiances, and betrayal conditions fresh every session. You can't memorize the game. You can only learn to read it.
