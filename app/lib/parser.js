@@ -213,8 +213,8 @@ function parseTextFormat(text) {
     ];
   }
 
-  // Parse scanner
-  const scannerMatch = text.match(/(?:POLICE SCANNER|📻)[:\s]*"?(.+?)"?\s*(?:\n|$)/i);
+  // Parse scanner or street whisper
+  const scannerMatch = text.match(/(?:STREET WHISPER|POLICE SCANNER|📻)[:\s]*"?(.+?)"?\s*(?:\n|$)/i);
   if (scannerMatch) {
     state.scanner = scannerMatch[1].replace(/^"|"$/g, '').trim();
   }
@@ -229,16 +229,24 @@ function parseTextFormat(text) {
   }
 
   // Parse hand entries: N. 👤 Name — Role · Block · Loyalty N/10
-  const handRegex = /(\d+)\.\s*(?:👤|⚔️|⚔)\s*(.+?)\s*(?:—|–|-)\s*(.+?)(?:\n|$)/g;
+  const handRegex = /(\d+)\.\s*(?:👤|⚔️|⚔|⚠️)\s*(.+?)\s*(?:—|–|-)\s*(.+?)(?:\n|$)/g;
   let hm;
   while ((hm = handRegex.exec(text)) !== null) {
     const parts = hm[3].split(/\s*·\s*/);
     const firstName = hm[2].trim();
 
     const moveNames = ['TAX', 'WAR', 'GHOST', 'SNITCH', 'STACK', 'PEACE', 'INTEL'];
+    const statusNames = ['PARANOIA', 'HEAT'];
+    
     if (moveNames.includes(firstName.toUpperCase())) {
       state.hand.push({
         type: 'move',
+        name: firstName.toUpperCase(),
+        description: parts.join(' '),
+      });
+    } else if (statusNames.includes(firstName.toUpperCase()) || text.substring(hm.index, hm.index + 5).includes('⚠️')) {
+      state.hand.push({
+        type: 'status',
         name: firstName.toUpperCase(),
         description: parts.join(' '),
       });
@@ -261,9 +269,10 @@ function parseTextFormat(text) {
     state.intel = parseInt(intelMatch[1], 10);
   }
 
-  // Parse choice: ← [A] ... → [B] ...
+  // Parse choice: ← [A] ... → [B] ... 🗑️ [BURN]
   const choiceAMatch = text.match(/←\s*\[A\]\s*(.+?)(?:\n|$)/);
   const choiceBMatch = text.match(/→\s*\[B\]\s*(.+?)(?:\n|$)/);
+  const choiceBurnMatch = text.match(/(?:🗑️|🗑)\s*\[BURN\]\s*(?:—|-)\s*"?(.+?)"?(?:\n|$)/);
   if (choiceAMatch || choiceBMatch) {
     // Look for description above the choices
     const choiceDescMatch = text.match(/(?:Your call|decide|choice|situation)[^:]*:\s*(.+?)(?=\s*←\s*\[A\])/is);
@@ -271,6 +280,7 @@ function parseTextFormat(text) {
       description: choiceDescMatch ? choiceDescMatch[1].trim() : '',
       optionA: choiceAMatch ? choiceAMatch[1].trim() : '',
       optionB: choiceBMatch ? choiceBMatch[1].trim() : '',
+      optionBurn: choiceBurnMatch ? choiceBurnMatch[1].trim() : '',
     };
   }
 

@@ -196,6 +196,29 @@ function renderMoveCard(card, index, cardW = 14) {
   return singleBox(lines, cardW);
 }
 
+// ── Status Card ──────────────────────────────────────────────────
+function renderStatusCard(card, index, cardW = 14) {
+  const inner = cardW - 2;
+  const name = truncate(card.name || '???', inner - 3);
+  // Break description into two lines if it's too long
+  const desc = card.description || '';
+  const desc1 = truncate(desc.substring(0, inner - 1), inner - 1);
+  const desc2 = truncate(desc.substring(inner - 1), inner - 1);
+
+  const idxStr = `${A.gold}${index}${A.reset}`;
+
+  const lines = [
+    `${idxStr}${A.dim}·${A.reset}${A.orange}${A.bold}⚠️ ${pad(name, inner - 4)}${A.reset}`,
+    `${pad('', inner)}`,
+    ` ${A.dim}${pad(desc1, inner - 1)}${A.reset}`,
+    ` ${A.dim}${pad(desc2, inner - 1)}${A.reset}`,
+    `${pad('', inner)}`,
+    `${pad('', inner)}`,
+  ];
+
+  return singleBox(lines, cardW);
+}
+
 // ── Full Board Render ────────────────────────────────────────────
 export function renderBoard(state) {
   const iW = W - 2; // inner width (inside double border)
@@ -265,10 +288,19 @@ export function renderBoard(state) {
     out.push(doubleMid(iW));
   }
 
-  // ── Police Scanner ──
+  // ── Street Whisper / Scanner ──
   if (state.scanner) {
-    const scanText = `  ${A.red}📻${A.reset} ${A.dim}"${state.scanner}"${A.reset}`;
-    out.push(doubleRow(scanText, iW));
+    // If it's a predictive intent, highlight it orange
+    const isIntent = state.scanner.includes('[INTENT');
+    const icon = isIntent ? `⚠️` : `📻`;
+    const color = isIntent ? A.orange : A.red;
+    
+    // Break into lines to prevent overflow
+    const scanLines = wordWrap(`"${state.scanner}"`, iW - 6);
+    out.push(doubleRow(`  ${color}${icon}${A.reset} ${A.dim}${scanLines[0]}${A.reset}`, iW));
+    for (let i = 1; i < scanLines.length; i++) {
+       out.push(doubleRow(`     ${A.dim}${scanLines[i]}${A.reset}`, iW));
+    }
     out.push(doubleMid(iW));
   }
 
@@ -285,9 +317,13 @@ export function renderBoard(state) {
   const cardW = 14;
 
   // Split hand into people cards and move cards, render side by side
+  // Split hand into people cards, move cards, status cards
   const cardBoxes = hand.map((card, i) => {
     if (card.type === 'move') {
       return renderMoveCard(card, i + 1, cardW);
+    }
+    if (card.type === 'status') {
+      return renderStatusCard(card, i + 1, cardW);
     }
     return renderPeopleCard(card, i + 1, cardW);
   });
@@ -324,8 +360,12 @@ export function renderBoard(state) {
       const optB = `  ${A.red}${A.bold}→ [B]${A.reset} ${A.white}${state.choice.optionB}${A.reset}`;
       out.push(doubleRow(optB, iW));
     }
+    if (state.choice.optionBurn) {
+      const optBurn = `  ${A.orange}${A.bold}🗑️ [BURN]${A.reset} ${A.dim}${state.choice.optionBurn}${A.reset}`;
+      out.push(doubleRow(optBurn, iW));
+    }
     out.push(doubleRow('', iW));
-    const prompt = `  ${A.gold}Your call? (A or B)${A.reset}`;
+    const prompt = `  ${A.gold}Your call? (A, B, or BURN)${A.reset}`;
     out.push(doubleRow(prompt, iW));
   } else {
     const prompt = `  ${A.gold}What do you play? (1-${hand.length || 5}, or INTEL [Name])${A.reset}`;

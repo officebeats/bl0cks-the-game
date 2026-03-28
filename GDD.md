@@ -158,6 +158,7 @@ South Side Chicago, present day. The game draws from the real neighborhood grid 
 | People Cards | Characters with visible + hidden stats | 5 | Deck draw |
 | Move Cards | Player actions: Tax, Ghost, Snitch, Stack, War, Peace | 3 | Deck draw |
 | Event Cards | Environmental chaos — raids, vacuums, droughts | Auto-triggered | System draw each turn |
+| Status Cards | "Heat" and "Paranoia" — dead draws that clog hand limit | Varies | Enemy Action |
 | Intel Cards | Reveal hidden character motives and faction plans | 2 | Earned — rare |
 | DLC Cards | Edition-exclusive or community-built — inject into any deck | Varies | Import / unlock |
 
@@ -188,11 +189,11 @@ The AI generates the hidden layer from the character's Markdown template at sess
 <!-- [ENGINE] — Core loop is fixed. Content within each step is world-layer swappable. -->
 
 1. Draw a **Block Card** — understand current territory state
-2. Play a **People Card** — choose how you engage this character
-3. An **Event Card** triggers — forces an immediate decision
-4. **Reigns-style choice:** Left (deny / retreat) or Right (commit / press)
-5. Consequences cascade: loyalty shifts, territory flips, clock ticks
-6. Repeat — with fewer Intel Cards and more hidden actors each level
+2. An **Event & Intent** triggers — The AI states exactly what it will do *next turn* if not blocked.
+3. Play a **People Card or Move** — choose how you engage this character or mitigate the incoming Intent.
+4. **Reigns-style choice:** Left (deny / retreat), Right (commit / press), or Burn (exhaust the card to thin your deck).
+5. Consequences cascade: intents resolve, loyalty shifts, territory flips, clock ticks.
+6. Repeat — balancing temporary crisis mitigation against permanent territory capture.
 
 ### 4.4 Move Cards — Full Spec
 
@@ -206,8 +207,21 @@ The AI generates the hidden layer from the character's Markdown template at sess
 | Stack | Fortify a block. Harder to flip. | Costs time — accelerates clock pressure | 2 ticks |
 | War | Challenge a rival block. Winner takes territory. | Both sides lose a People Card on loss | 1 tick |
 | Peace | Broker a temporary alliance. Shared block. | Alliance is AI-managed — betrayal possible anytime | 1 tick |
+| Burn | Cut ties with an associate. Exhausts the card. | Permanent removal from deck pool | 1 tick |
 
-### 4.5 Card Anatomy — Physical Spec
+### 4.5 Assets & Relics
+
+<!-- [ENGINE] — Persistent, rule-breaking passive buffs inspired by Slay the Spire. -->
+
+Locking down specific territories or making difficult narrative sacrifices can yield **Assets**. Assets provide permanent structural buffs for the entire run.
+
+| Asset Example | Effect | Source |
+|---|---|---|
+| The Greek Diner | First Intel card played is free | Holding Auburn Gresham |
+| Crooked Alderman | Ignore one police scanner intent per act | Maxing Loyalty with a Law card |
+| Burner Network | Hand size +1, but must Exhaut 1 card on start | Act 2 story milestone |
+
+### 4.6 Card Anatomy — Physical Spec
 
 <!-- [ENGINE] — Card dimensions and layout zones are fixed. Visual treatment is [TEMPLATE]. -->
 
