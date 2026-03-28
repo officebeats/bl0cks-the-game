@@ -194,37 +194,13 @@ function displayResponse(text) {
       return state;
     }
 
-    // Render the game board
+    // Render the game board — it already shows everything
     clear();
     console.log(renderBoard(state));
-
-    // Show narrative text if it's interesting (not just the JSON)
-    const narrative = text.replace(/```json[\s\S]*?```/g, '').trim();
-    // Only show narrative if it has substantial content beyond the board format
-    const narrativeLines = narrative.split('\n').filter(l =>
-      l.trim() &&
-      !l.includes('━') &&
-      !l.match(/^[●○◐◇]/) &&
-      !l.match(/^\d+\./) &&
-      !l.match(/BL0CKS/) &&
-      !l.match(/Clock:/) &&
-      !l.match(/TERRITORY/) &&
-      !l.match(/YOUR HAND/) &&
-      !l.match(/Intel Cards/) &&
-      !l.match(/What do you play/)
-    );
-
-    if (narrativeLines.length > 2) {
-      const narrativeText = narrativeLines.join('\n').trim();
-      if (narrativeText.length > 50) {
-        console.log(renderNarrative(narrativeText));
-      }
-    }
-
     return state;
   }
 
-  // Narrative-only response
+  // Narrative-only response (no JSON parsed)
   console.log(renderNarrative(state.raw));
   return state;
 }
