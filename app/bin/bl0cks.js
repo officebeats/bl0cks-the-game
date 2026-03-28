@@ -376,7 +376,7 @@ async function main() {
   // ── Regular Game Flow ──
   clear();
   // ── Variable Typographic Slash Animation ──
-  for (let f = 0; f < 20; f++) {
+  for (let f = 0; f < 70; f++) {
     // Reset cursor to top to avoid flicker
     process.stdout.write('\x1b[H');
     console.log(renderSplash(f));
