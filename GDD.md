@@ -802,28 +802,36 @@ When a creator publishes a card pack:
 │  Enter Your API Key                   │  24px bold
 │  Validated server-side.               │  13px #888888
 │  Never stored locally.                │
-│  ANTHROPIC API KEY                    │  11px #888888, label above input
+│  [PROVIDER] API KEY                   │  11px #888888, label above input
 │  ┌─────────────────────────────────┐  │  Input field: h 56px, bg #1A1A2E
-│  │  sk-ant-••••••••••••••  [show]  │  │  border: 1px #2E2E4A (default)
+│  │  [Placeholder format]   [show]  │  │  border: 1px #2E2E4A (default)
 │  └─────────────────────────────────┘  │  border: 1px #C0392B (focused) + glow
-│  ⓘ Keys start with sk-ant-           │  border: 1px #27AE60 (valid format)
+│  ⓘ [Helper validation text]          │  border: 1px #27AE60 (valid format)
 │    Don't have one? Get it here →      │  border: 1px #E74C3C (error)
 │  ┌─────────────────────────────────┐  │
 │  │          VALIDATE KEY           │  │  56px h, full width -32px margin
 │  └─────────────────────────────────┘  │  disabled when field empty
 │  ─────────  OR  ─────────            │  divider: 1px #2E2E4A, OR centered
 │  ┌─────────────────────────────────┐  │
-│  │  🔒  Sign in with Anthropic     │  │  SSO option: 56px h
+│  │  🔒  Sign in with [Provider]    │  │  SSO option: 56px h
 │  └─────────────────────────────────┘  │  border: 1px #2E2E4A, 15px #F2F2F2
 │   Subscription covers API costs       │  11px #888888 centered, bottom
 └───────────────────────────────────────┘
 ```
 
+**Dynamic formatting by provider:**
+
+| Provider | Placeholder format | Helper validation text | Validation logic |
+|---|---|---|---|
+| **Anthropic** | `sk-ant-••••••••••••••` | "Keys start with sk-ant-" | `startsWith('sk-ant-')` |
+| **Gemini** | `AIza•••••••••••••••••` | "Keys start with AIza" | `startsWith('AIza')` |
+| **OpenAI** | `sk-proj-•••••••••••••` | "Keys start with sk-" | `startsWith('sk-')` |
+
 **Input interaction states:**
 
 | State | Border Color | Button | Helper Text |
 |---|---|---|---|
-| Default (empty) | `#2E2E4A` | Disabled | "Keys start with sk-ant-" |
+| Default (empty) | `#2E2E4A` | Disabled | [Helper validation text] |
 | Focused | `#C0392B` + glow | Active if length > 20 | — |
 | Valid format | `#27AE60` | Active, red | Green check + "Looks good" |
 | Validating | `#C0392B` pulse | Spinner + "Checking…" | "Checking with server…" |
@@ -834,8 +842,8 @@ When a creator publishes a card pack:
 
 | Error Code | Message Displayed |
 |---|---|
-| `INVALID_KEY_FORMAT` | "That key format doesn't look right. Anthropic keys start with sk-ant-" |
-| `KEY_REVOKED` | "This key has been revoked. Generate a new one in your Anthropic console." |
+| `INVALID_KEY_FORMAT` | "That key format doesn't look right. [Provider] keys start with [Prefix]." |
+| `KEY_REVOKED` | "This key has been revoked. Generate a new one in your API console." |
 | `RATE_LIMITED` | "Too many attempts. Wait 60 seconds and try again." |
 | `SERVER_ERROR` | "Something went wrong on our end. Try again in a moment." |
 
