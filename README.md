@@ -1,6 +1,12 @@
 <div align="center">
 
-# B L 0 C K S
+```text
+  ____   _        ___     ____  _  __  ____  
+ | __ ) | |      / _ \   / ___|| |/ / / ___| 
+ |  _ \ | |     | | | | | |    | ' /  \___ \ 
+ | |_) || |___  | |_| | | |___ | . \   ___) |
+ |____/ |_____|  \___/   \____||_|\_\ |____/ 
+```
 
 ### Territory. Trust. Time.
 
@@ -141,3 +147,4 @@ Built by [Ernesto "Beats" Rodriguez](https://github.com/officebeats)
 *Star this repo to get notified when we launch.*
 
 </div>
+
