@@ -374,10 +374,15 @@ async function main() {
   }
 
   // ── Regular Game Flow ──
-  const config = loadConfig();
-
   clear();
-  console.log(renderSplash());
+  // ── Variable Typographic Slash Animation ──
+  for (let f = 0; f < 20; f++) {
+    // Reset cursor to top to avoid flicker
+    process.stdout.write('\x1b[H');
+    console.log(renderSplash(f));
+    await new Promise(r => setTimeout(r, 70));
+  }
+  const config = loadConfig();
 
   let provider;
   if (config.provider) {

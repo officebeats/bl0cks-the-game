@@ -440,19 +440,20 @@ function renderFannedHand(cards, innerWidth) {
   const cW = CARD_W;
   const cH = CARD_H;
 
-  // Determine overlap — adaptive based on card count
+  // Determine minimal overlap to ensure text remains fully visible
+  // We want the maximum possible step between cards, constrained by innerWidth.
   let overlap;
-  if (n === 1) {
+  if (n <= 1) {
     overlap = 0;
-  } else if (n === 2) {
-    overlap = 6;
-  } else if (n <= 4) {
-    overlap = 7;
   } else {
-    // For 5+ cards, increase overlap to fit
-    const maxFanW = innerWidth - 6; // margin
-    overlap = Math.max(7, cW - Math.floor((maxFanW - cW - 2) / (n - 1)));
-    overlap = Math.min(overlap, cW - 4); // ensure at least 4 cols visible
+    const maxFanW = innerWidth - 2; // use most of available width
+    const maxStep = Math.floor((maxFanW - cW - 1) / (n - 1));
+    const requiredOverlap = cW - maxStep;
+    
+    // We want at least 1 column of overlap so they visually connect (hide right border)
+    overlap = Math.max(1, requiredOverlap);
+    // Don't overlap so much that the card becomes unreadable
+    overlap = Math.min(overlap, cW - 6); 
   }
 
   const step = cW - overlap;
@@ -727,8 +728,7 @@ export function renderLoading() {
   return `  ${A.smoke}${BOX.medium} The block is thinking...${A.reset}`;
 }
 
-// ── Splash Screen ────────────────────────────────────────────────
-export function renderSplash() {
+export function renderSplash(frame = 0) {
   const iW = W - 2;
   const out = [];
 
@@ -736,19 +736,45 @@ export function renderSplash() {
   out.push(doubleTop(iW));
   out.push(doubleRow('', iW));
 
-  // FIGlet-style logo with color gradient (red → crimson → rust)
-  const logo = [
-    ' ____  _     ___   ____ _  ______',
-    '| __ )| |   / _ \\ / ___| |/ / ___|',
-    '|  _ \\| |  | | | | |   | \' /\\___ \\',
-    '| |_) | |__| |_| | |___| . \\ ___) |',
-    '|____/|_____\\___/ \\____|_|\\_\\____/',
+  // ── Variable Typographic ASCII Effect ──
+  // A solid block representation of BL0CKS
+  const mask = [
+    '██████╗ ██╗      ██████╗  ██████╗██╗  ██╗███████╗',
+    '██╔══██╗██║     ██╔═══██╗██╔════╝██║ ██╔╝██╔════╝',
+    '██████╔╝██║     ██║   ██║██║     █████╔╝ ███████╗',
+    '██╔══██╗██║     ██║   ██║██║     ██╔═██╗ ╚════██║',
+    '██████╔╝███████╗╚██████╔╝╚██████╗██║  ██╗███████║',
+    '╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝╚═╝  ╚═╝╚══════╝'
   ];
 
-  const logoColors = [A.red, A.red, A.crimson, A.crimson, A.rust];
-  for (let i = 0; i < logo.length; i++) {
-    const line = `${logoColors[i]}${A.bold}${logo[i]}${A.reset}`;
-    out.push(doubleRow(padCenter(line, iW), iW));
+  const palette = " .:-=+*#%@";
+  const logoColors = [A.red, A.red, A.crimson, A.crimson, A.rust, A.rust];
+
+  for (let y = 0; y < mask.length; y++) {
+    let lineStr = "";
+    for (let x = 0; x < mask[y].length; x++) {
+      const ch = mask[y][x];
+      // If the character is not empty space, map it to the variable typography palette
+      if (ch !== ' ') {
+        // Create an organic wave/noise field
+        const t = frame * 0.15;
+        const nx = x * 0.15;
+        const ny = y * 0.3;
+        const noise = (Math.sin(nx + t) + Math.cos(ny - t) + Math.sin(nx * 0.5 - ny * 0.5 + t * 1.5)) / 3;
+        
+        // Map noise [-1, 1] to palette index
+        const pIdx = Math.floor(((noise + 1) / 2) * (palette.length - 1));
+        const safeIdx = Math.max(0, Math.min(palette.length - 1, pIdx));
+        lineStr += palette[safeIdx];
+      } else {
+        lineStr += " ";
+      }
+    }
+    
+    // Some minor shadow effect padding
+    const color = logoColors[y];
+    const styledLine = `${color}${A.bold}${lineStr}${A.reset}`;
+    out.push(doubleRow(padCenter(styledLine, iW), iW));
   }
 
   out.push(doubleRow('', iW));
@@ -760,7 +786,7 @@ export function renderSplash() {
   out.push(doubleRow(padCenter(`${A.smoke}where every decision costs you something.${A.reset}`, iW), iW));
   out.push(doubleRow('', iW));
 
-  // Street atmosphere — decorative dots forming a skyline-ish shape
+  // Street atmosphere
   const skyline = `${A.smoke}${BOX.light} ${BOX.light}  ${BOX.light}  ${A.slate}\u25c6${A.smoke}  ${BOX.light}  ${BOX.light} ${BOX.light}`;
   out.push(doubleRow(padCenter(skyline, iW), iW));
 
