@@ -11,7 +11,7 @@ import { createOpenAIAdapter } from '../lib/adapters/openai.js';
 import { parseResponse } from '../lib/parser.js';
 import {
   renderBoard, renderNarrative, renderWin, renderLoss,
-  renderSplash, renderProviderSelect, A,
+  renderSplash, renderProviderSelect, renderHelp, A,
 } from '../lib/renderer.js';
 import { fetchPacks, installPack, fetchLeaderboard, submitScore } from '../lib/cloud.js';
 
@@ -214,21 +214,7 @@ function displayResponse(text) {
 
 // ── Help screen ──────────────────────────────────────────────────
 function showHelp() {
-  const iW = 78;
-  console.log(`
-${A.gray}╔${'═'.repeat(iW)}╗${A.reset}
-${A.gray}║${A.reset}  ${A.bold}${A.white}BL0CKS — Commands${A.reset}${' '.repeat(iW - 21)}${A.gray}║${A.reset}
-${A.gray}╠${'═'.repeat(iW)}╣${A.reset}
-${A.gray}║${A.reset}  ${A.gold}1-5${A.reset}              Play a card from your hand${' '.repeat(iW - 46)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}  ${A.gold}A${A.reset} or ${A.gold}B${A.reset}           Make a choice when prompted${' '.repeat(iW - 48)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}  ${A.gold}INTEL [Name]${A.reset}     Reveal a character's hidden stats${' '.repeat(iW - 51)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}  ${A.gold}help${A.reset}             Show this help screen${' '.repeat(iW - 41)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}  ${A.gold}quit${A.reset}             Exit the game${' '.repeat(iW - 34)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}${' '.repeat(iW)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}  ${A.dim}The AI is the game engine. You can also type${' '.repeat(iW - 47)}${A.gray}║${A.reset}
-${A.gray}║${A.reset}  ${A.dim}naturally — it understands strategy and threats.${' '.repeat(iW - 50)}${A.gray}║${A.reset}
-${A.gray}╚${'═'.repeat(iW)}╝${A.reset}
-`);
+  console.log(renderHelp());
 }
 
 // ── Game loop ────────────────────────────────────────────────────

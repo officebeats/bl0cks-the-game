@@ -1,6 +1,6 @@
 <!-- 
   ╔══════════════════════════════════════════════════════════════════╗
-  ║  BL0CKS — Game Design Document Template v2.0                    ║
+  ║  BL0CKS — Game Design Document v3.0                              ║
   ║                                                                  ║
   ║  HOW TO USE THIS TEMPLATE:                                       ║
   ║  1. Fork/clone this repository                                   ║
@@ -27,13 +27,14 @@
   ╚══════════════════════════════════════════════════════════════════╝
 -->
 
-# BL0CKS — Game Design Document v2.0
+# BL0CKS — Game Design Document v3.0
 
 > **Status:** Active Development  
-> **Version:** 2.0  
+> **Version:** 3.0 — Mechanics-Complete Revision  
 > **Lead Designer:** Ernesto "Beats" Rodriguez  
 > **Date:** March 2026  
-> **Classification:** Confidential — Not For Distribution
+> **Classification:** Confidential — Not For Distribution  
+> **Changelog:** v3.0 integrates core gameplay mechanics (Resource Economy, Keyword Synergies, Heat System, Gambit System, The Stash, The Ledger) into the GDD proper. Absorbs STS_MECHANICS_INTEGRATION.md. All new systems annotated `[ENGINE]`.
 
 ---
 
@@ -43,6 +44,17 @@
 2. [Core Design Pillars](#2-core-design-pillars)
 3. [World Design](#3-world-design)
 4. [Card System](#4-card-system)
+    - [4.1 Card Types](#41-card-types)
+    - [4.2 The Hidden Stat System](#42-the-hidden-stat-system)
+    - [4.3 Core Mechanic Loop](#43-core-mechanic-loop)
+    - [4.4 Move Cards — Full Spec](#44-move-cards--full-spec)
+    - [4.5 Assets & The Stash](#45-assets--the-stash)
+    - [4.6 Card Anatomy — Physical Spec](#46-card-anatomy--physical-spec)
+    - [4.7 Resource Economy — Influence](#47-resource-economy--influence)
+    - [4.8 Keyword & Synergy System](#48-keyword--synergy-system)
+    - [4.9 The Gambit System](#49-the-gambit-system)
+    - [4.10 The Heat Meter](#410-the-heat-meter)
+    - [4.11 The Ledger — Persistent Consequences](#411-the-ledger--persistent-consequences)
 5. [Level Design & Difficulty Curve](#5-level-design--difficulty-curve)
 6. [AI Architecture & Multi-Model System](#6-ai-architecture--multi-model-system)
 7. [Card Creation Engine](#7-card-creation-engine)
@@ -76,6 +88,8 @@ What makes BL0CKS structurally unique is that it is the first strategy card game
 The second hook — and the one that will make this **viral** — is the Card Creation Engine. BL0CKS is not just a game. It is a **game factory**. Players will clone the engine, swap the world files, and rebuild it as their own. The cultural surface is infinite. The engine is the product.
 
 > **Design North Star:** Every mechanic must serve one of three pillars: **Territory, Trust, or Time.** If a card, event, or system does not touch at least one pillar, it does not belong in the game.
+
+> **Fun North Star:** Every turn must force the player to make a decision they feel in their gut. The question is never "what should I do?" — it's "what can I afford to *lose*?" Great strategy games make you feel like a genius when you win and like it was *your* fault when you lose. BL0CKS achieves this through resource scarcity, predictive information, and irreversible consequences.
 
 ---
 
@@ -188,38 +202,102 @@ The AI generates the hidden layer from the character's Markdown template at sess
 
 <!-- [ENGINE] — Core loop is fixed. Content within each step is world-layer swappable. -->
 
-1. Draw a **Block Card** — understand current territory state
-2. An **Event & Intent** triggers — The AI states exactly what it will do *next turn* if not blocked.
-3. Play a **People Card or Move** — choose how you engage this character or mitigate the incoming Intent.
-4. **Reigns-style choice:** Left (deny / retreat), Right (commit / press), or Burn (exhaust the card to thin your deck).
-5. Consequences cascade: intents resolve, loyalty shifts, territory flips, clock ticks.
-6. Repeat — balancing temporary crisis mitigation against permanent territory capture.
+**The Turn — 10 Phases**
+
+Every turn follows this exact sequence. The player has agency in phases 4–7. The rest is engine-resolved.
+
+| Phase | Name | Who Acts | What Happens |
+|---|---|---|---|
+| 1 | **Dawn** | Engine | Influence resets to base (default 3). Any "start of turn" Asset effects trigger. |
+| 2 | **Draw** | Engine | Fill hand to 5 cards (People + Moves + Status). Status cards (Paranoia, Heat) count against hand limit. |
+| 3 | **Street Whisper** | Engine | AI broadcasts **predictive intent** — what rival factions or police *will do* at end of turn if not blocked. This is open information. The player knows what's coming. |
+| 4 | **Scheme** | Player | Player surveys hand, territory, clock, Heat Meter, and active Assets. Plans turn. No Influence spent yet. |
+| 5 | **Act** | Player | Player plays cards from hand. Each card costs 1–3 Influence (see 4.7). Player can play as many cards as Influence allows. Playing a People Card triggers a binary/gambit choice (see 4.9). Playing a Move Card executes its effect immediately. |
+| 6 | **Combo** | Engine | Any keyword triggers chain-resolve (see 4.8). If the player's actions this turn activated a keyword combo, bonus effects apply now. |
+| 7 | **Burn** | Player (optional) | Player may voluntarily **Exhaust** one card from hand — permanently removes it from the deck pool. Thinning the deck is a core strategy. Exhausting costs 0 Influence but the card is gone forever. |
+| 8 | **Intent Resolves** | Engine | Any unblocked Street Whisper intents execute. Territory flips, loyalty drops, Heat cards inject into deck, clock ticks. |
+| 9 | **Heat Check** | Engine | Global Heat Meter advances by 1. If Heat crosses a threshold, a permanent global modifier activates (see 4.10). |
+| 10 | **Dusk** | Engine | Clock ticks by the total tick cost of this turn's actions. Win/loss conditions checked. If clock hits 0 or conditions met, level ends. Otherwise → next turn at Phase 1. |
+
+> **The Core Tension:** You have 3 Influence. A defensive Enforcer costs 2. A Tax to generate long-term advantage costs 1. The Street Whisper says the Lords are hitting Auburn Gresham. Do you block the assault (2 Influence, safe), Tax Woodlawn for resources (1 Influence, long play), and then have 0 left to play your Broker who could flip Chatham? Or do you let Auburn Gresham fall, play your Broker (1 Influence) and Tax (1 Influence) and War (1 Influence) to win two blocks while losing one? **This is the game.**
 
 ### 4.4 Move Cards — Full Spec
 
 <!-- [TEMPLATE] — Move names and flavor are swappable. Mechanic effects are [ENGINE]. -->
 
-| Move | Effect | Risk | Clock Cost |
+Move Cards now scale with board state. Each card lists its **base** effect and its **powered** effect (triggered when conditions are met).
+
+| Move | Influence Cost | Base Effect | Powered Condition | Powered Effect | Clock Cost |
+| **Tax** | 1 | Collect 1 resource from a controlled block. | You control 3+ blocks. | Collect from ALL controlled blocks. +1 Influence next turn. | 1 tick |
+| **Ghost** | 0 | Disappear from a block. Remove your marker. Block becomes uncontrolled. | You have 0 Status Cards in hand. | Ghost is silent — no Heat generated. Rival factions don't notice for 1 turn. | 0 ticks |
+| **Snitch** | 2 | Reveal one hidden stat on any People Card (free Intel — doesn't cost Intel token). | Target has Loyalty ≤ 4. | Reveal ALL hidden stats. But that character's betrayal threshold drops by 3. | 2 ticks |
+| **Stack** | 2 | Fortify a block. +2 Block Points (temporary shields that absorb assault damage). | An Enforcer is active in the target block. | +4 Block Points instead. Combo: triggers Enforcer's keyword. | 2 ticks |
+| **War** | 3 | Challenge a rival block. AI resolves combat: highest combined Loyalty of your People Cards in/adjacent vs. rival NPCs. Winner takes territory. | You've played War in 2 consecutive turns. | **Blitz** — War costs 2 Influence instead of 3. But generates +2 Heat. | 1 tick |
+| **Peace** | 1 | Broker a temporary alliance. Contested block becomes shared for 3 turns. | Both factions have People Cards with Loyalty ≥ 7. | Alliance lasts 5 turns. Shared block generates resources for both. | 1 tick |
+| **Burn** | 0 | Exhaust a card from hand or deck. Permanent removal. | Card being burned is a Status Card (Paranoia/Heat). | Burning a Status Card grants +1 Influence immediately (relief bonus). | 0 ticks |
+
+### 4.5 Assets & The Stash
+
+<!-- [ENGINE] — Persistent, rule-breaking passive buffs inspired by Slay the Spire.
+     Asset EFFECTS are engine. Asset NAMES and FLAVOR are [TEMPLATE]. -->
+
+Assets provide **permanent structural buffs for the entire run.** They are the primary progression reward between levels and the core reason no two runs feel the same.
+
+#### How The Stash Works
+
+After completing each level, the player enters **The Stash** — a reward screen where they choose **1 of 3 randomly offered Assets.** This is the moment of strategic investment. Assets are permanent for the rest of the campaign run.
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  THE STASH — LEVEL 3 COMPLETE
+  Choose 1 Asset. This is permanent.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  [A] 🍽️  THE GREEK DINER
+      First Intel card each level is free.
+      (Info advantage — know more, faster)
+
+  [B] 🔫  CORNER ARMORY
+      Enforcers gain +1 Block Point when defending.
+      (Defensive scaling — territory holds longer)
+
+  [C] 📱  BURNER NETWORK
+      Hand size +1 (draw 6 instead of 5).
+      Must Exhaust 1 card at start of each level.
+      (Card advantage with a cost)
+
+  Your pick? (A, B, or C)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+#### Asset Pool — Full Spec
+
+| Asset | Effect | Category | Unlock Condition |
 |---|---|---|---|
-| Tax | Collect from a controlled block. Gain resources. | Generates resentment — People cards in that block lose 1 loyalty | 1 tick |
-| Ghost | Disappear from a block. Remove your marker. | Block becomes uncontrolled — rivals can claim it | 0 ticks |
-| Snitch | Reveal one hidden stat on a People Card for free. | That character's betrayal threshold drops by 3 | 2 ticks |
-| Stack | Fortify a block. Harder to flip. | Costs time — accelerates clock pressure | 2 ticks |
-| War | Challenge a rival block. Winner takes territory. | Both sides lose a People Card on loss | 1 tick |
-| Peace | Broker a temporary alliance. Shared block. | Alliance is AI-managed — betrayal possible anytime | 1 tick |
-| Burn | Cut ties with an associate. Exhausts the card. | Permanent removal from deck pool | 1 tick |
+| **The Greek Diner** | First Intel card played each level costs 0 Influence | Information | Available from Level 2+ |
+| **Crooked Alderman** | Ignore one Police-type Street Whisper intent per level | Defense | Available from Level 3+ |
+| **Burner Network** | Hand size +1 (6 cards). Must Exhaust 1 card at start of each level. | Card Advantage | Available from Level 2+ |
+| **Corner Armory** | All Enforcers gain +1 Block Point passive buff | Defense | Available from Level 3+ |
+| **The Plug** | Tax generates double resources from the first block taxed each turn | Economy | Available from Level 4+ |
+| **Ghost Protocol** | Ghost move also clears 1 Status Card from hand for free | Utility | Available from Level 3+ |
+| **Bail Money** | Once per level, prevent a People Card from being lost in a failed War | Recovery | Available from Level 5+ |
+| **Wire Tap** | At the start of each level, reveal 1 hidden stat on a random NPC for free | Information | Available from Level 4+ |
+| **OG Status** | +1 base Influence per turn (permanent 4 instead of 3) | Economy | Available from Level 7+ (Act II only) |
+| **Safe House** | When you lose a territory, 1 People Card in that block auto-escapes to your nearest block | Recovery | Available from Level 6+ |
+| **Inside Man** | Peace alliances last +2 turns and cannot be broken by enemy intent | Diplomacy | Available from Level 5+ |
+| **Cold Hands** | Burn (Exhaust) moves grant +2 Influence instead of +1 when burning Status Cards | Deck Thinning | Available from Level 4+ |
 
-### 4.5 Assets & Relics
+> **Design Rule:** Assets should *feel* like cheating in a good way. Each one should make the player grin when they see it offered. The best Assets change how you evaluate every card in your hand.
 
-<!-- [ENGINE] — Persistent, rule-breaking passive buffs inspired by Slay the Spire. -->
+#### Asset Stacking
 
-Locking down specific territories or making difficult narrative sacrifices can yield **Assets**. Assets provide permanent structural buffs for the entire run.
+Assets **stack and synergize** — two Assets together can be more powerful than the sum of their parts:
 
-| Asset Example | Effect | Source |
-|---|---|---|
-| The Greek Diner | First Intel card played is free | Holding Auburn Gresham |
-| Crooked Alderman | Ignore one police scanner intent per act | Maxing Loyalty with a Law card |
-| Burner Network | Hand size +1, but must Exhaut 1 card on start | Act 2 story milestone |
+- **Wire Tap + The Greek Diner:** You start each level already knowing a hidden stat AND get your first Intel free = Act II feels almost like Act I difficulty.
+- **Burner Network + Cold Hands:** Extra card draw + boosted Exhaust rewards = aggressive deck-thinning archetype.
+- **Corner Armory + Safe House:** Your territories are nearly impossible to crack = fortress playstyle.
+
+The AI should narratively acknowledge Asset combos when they trigger ("Your Corner Armory boys stacked the block while the Safe House network pulled Marcus out before the Lords even got to Cottage Grove").
 
 ### 4.6 Card Anatomy — Physical Spec
 
@@ -228,26 +306,203 @@ Locking down specific territories or making difficult narrative sacrifices can y
 Each card renders at **343 × 480px (mobile)** or **229 × 320px (compact hand view)**:
 
 ```
-┌─────────────────────────────┐  ← Card border: 2px, faction color
-│ [FACTION BADGE]  [CARD TYPE]│  ← Top bar: 48px tall
-│─────────────────────────────│
-│                             │
-│      [AI ILLUSTRATION]      │  ← Art zone: 200px tall, full bleed
-│         340 × 200px         │
-│                             │
-│─────────────────────────────│
-│ CHARACTER NAME              │  ← Name: 18px bold
-│ Role · Block Affiliation    │  ← Sub: 12px, muted
-│─────────────────────────────│
-│ LOYALTY  ████████░░  8/10   │  ← Progress bar: 24px tall
-│─────────────────────────────│
-│ VISIBLE STATS               │  ← Stat block: 72px tall
-│ Enforcer · Woodlawn         │
-│ Governors · Active          │
-│─────────────────────────────│
-│ [HIDDEN]  ??? / Intel req.  │  ← Hidden stat zone: 40px, locked
-└─────────────────────────────┘
+┌─────────────────────────────────┐  ← Card border: 2px, faction color
+│ [FACTION BADGE]  [CARD TYPE]    │  ← Top bar: 48px tall
+│  [INFLUENCE COST: ●●○]         │  ← Cost pips: filled = cost, unfilled = max
+│─────────────────────────────────│
+│                                 │
+│      [AI ILLUSTRATION]          │  ← Art zone: 200px tall, full bleed
+│         340 × 200px             │
+│                                 │
+│─────────────────────────────────│
+│ CHARACTER NAME                  │  ← Name: 18px bold
+│ Role · Block Affiliation        │  ← Sub: 12px, muted
+│ [KEYWORD BADGES]                │  ← e.g., ⛨ BLOCK  ◆ CONNECT  ☠ FLIP
+│─────────────────────────────────│
+│ LOYALTY  ████████░░  8/10       │  ← Progress bar: 24px tall
+│─────────────────────────────────│
+│ VISIBLE STATS                   │  ← Stat block: 72px tall
+│ Enforcer · Woodlawn             │
+│ Governors · Active              │
+│─────────────────────────────────│
+│ [HIDDEN]  ??? / Intel req.      │  ← Hidden stat zone: 40px, locked
+└─────────────────────────────────┘
 ```
+
+---
+
+### 4.7 Resource Economy — Influence
+
+<!-- [ENGINE] — Influence is the core action budget. Do not modify without full review. -->
+
+**Influence** is the per-turn action currency. It is the single most important number in the game.
+
+| Rule | Value |
+|---|---|
+| **Base Influence per turn** | 3 (can be modified by Assets, e.g., OG Status → 4) |
+| **Max Influence per turn** | 6 (hard cap — no stacking beyond this) |
+| **Unspent Influence** | Does NOT carry over. Use it or lose it. |
+| **Influence generation** | Powered Tax (+1 next turn), Burn Status Card (+1 immediate), some Asset effects |
+| **Why 3?** | 3 is the *minimum viable action budget.* You can play a 2-cost Enforcer + 1-cost Tax, OR a 3-cost War, OR three 1-cost actions. You can *never* do everything you want. This is by design. |
+
+**Why Influence Works (Designer's Note):**
+
+The feeling of "I need to do 5 things and I can only afford 3" is the engine of fun. Without Influence, the player can just play every card every turn, which means no trade-offs, which means no strategy, which means no fun. Influence transforms every card from "should I play this?" into "can I *afford* to play this, and what am I giving up if I do?"
+
+> **Example Turn Budget:**
+> - Influence: 3
+> - Hand: Darius Webb (Broker, cost 1), Marcus Cole (Enforcer, cost 2), TAX (cost 1), WAR (cost 3), PARANOIA (unplayable, cost N/A)
+> - Street Whisper: "[INTENT: ASSAULT] Lords are taking Auburn Gresham"
+>
+> **Option A — Defend:** Play Marcus (2) to block the assault + Tax Woodlawn (1) = 3 spent. Safe play. Auburn Gresham holds. But Darius and War sit unused.
+>
+> **Option B — Gamble:** Play War on Englewood (3) = 3 spent. You might take Englewood from the Lords — a massive gain. But Auburn Gresham falls undefended.
+>
+> **Option C — Balanced:** Play Darius (1) to broker info + Tax (1) + save 1 Influence... but you can't spend saved Influence next turn. So this just wastes 1 Influence.
+>
+> **There is no comfortable choice.** That's what makes it a game.
+
+---
+
+### 4.8 Keyword & Synergy System
+
+<!-- [ENGINE] — Keywords are formalized mechanical effects. Keyword NAMES are [TEMPLATE]. -->
+
+Every People Card and some Move Cards carry **Keywords** — standardized mechanical effects that chain off each other when played in combination.
+
+#### Keyword Definitions
+
+| Keyword | Icon | Effect When Played | Combo Potential |
+|---|---|---|---|
+| **Block** | ⛨ | Generates Block Points (temporary shields) on a territory. Absorbs enemy Assault damage. Block Points expire at end of turn. | Stack + Block = double Block Points |
+| **Connect** | ◆ | Reveals 1 hidden stat on a People Card in the same block. Free intel without spending Intel token. | Connect + Connect (same turn) = reveal 1 additional stat |
+| **Flip** | ☠ | If target People Card's hidden loyalty differs from visible loyalty by 3+, trigger a betrayal event. The card turns hostile. | Flip + Snitch (same turn) = betrayal is revealed before it fires, giving player a chance to Burn the card |
+| **Hustle** | 💰 | Generates +1 Influence immediately when played. Pays for part of its own cost. | Hustle + Tax = net positive Influence turn (fuels aggressive plays) |
+| **Fortify** | 🏰 | Territory where this card is played cannot be contested by War for 1 turn. | Fortify + Peace = unbreakable shared territory for 1 turn |
+| **Shadow** | 👻 | This card's play is hidden from rival factions. No Heat generated. | Shadow + War = surprise attack — rival cannot prepare Block Points |
+| **Rally** | 📢 | +1 visible loyalty to ALL People Cards in the same block. | Rally + Rally (two People Cards with Rally in same turn) = +2 loyalty each (squad buff) |
+
+#### How Keywords Chain
+
+Keywords trigger during **Phase 6 (Combo)** of the turn. The AI checks:
+
+1. Were 2+ keywords activated this turn?
+2. Do any keywords have combo interactions (see "Combo Potential" column)?
+3. If yes → resolve bonus effects.
+
+> **Example Combo:** Player plays an Enforcer with ⛨ BLOCK + 💰 HUSTLE (cost 2, but Hustle returns +1 Influence, effective cost 1). Then plays Stack (cost 2). Stack + Block combo triggers → +4 Block Points instead of +2. Auburn Gresham becomes a fortress for 1 Influence less than expected.
+
+**Designer Rule:** Keywords create **emergent strategy**. The player isn't told "build a Block deck" — they discover that Enforcers + Stack + Fortify creates an impenetrable territory playstyle. That moment of discovery is the dopamine hit.
+
+---
+
+### 4.9 The Gambit System
+
+<!-- [ENGINE] — The Gambit is the high-risk/high-reward third option. This creates the memorable moments. -->
+
+When a People Card triggers a binary choice (Reigns-style Left/Right), a third option appears on **critical decisions**: **The Gambit.**
+
+```
+> You played: 👤 Darius Webb
+
+Darius wants a cut of the Woodlawn block.
+Says he's earned it. You decide.
+
+  ← [A] DENY — "He goes cold. Loyalty -2."
+  → [B] GIVE CUT — "He stacks for you. +1 loyalty."
+  🎲 [G] GAMBIT: DOUBLE DOWN — "Offer him the WHOLE block.
+     If his hidden loyalty is ≥ 6, he swears a blood oath.
+     +4 loyalty, Block keyword activates, permanent ally status.
+     If his hidden loyalty is < 6... he takes it and flips.
+     You lose Woodlawn AND Darius."
+
+Your call? (A, B, or G)
+```
+
+#### Gambit Rules
+
+| Rule | Detail |
+|---|---|
+| **When Gambits appear** | Every People Card decision has a 40% chance of offering a Gambit. Boss encounters always offer a Gambit. |
+| **Gambit structure** | Always binary: massive upside vs. massive downside, gated by a **hidden stat check** the player doesn't know. |
+| **Gambit cost** | Free Influence cost — but the consequence is irreversible. |
+| **Information asymmetry** | The Gambit's success/failure depends on hidden stats. If the player has already Intel'd the character, they can make an informed Gambit. Otherwise, it's a read. |
+| **Why it works** | Gambits create the stories players tell each other. "Dude, I Gambit'd the Enforcer and he flipped my whole block" or "I Gambit'd Tanya and she became my best card for the rest of the run." These are the viral moments. |
+
+> **Design Note:** Gambits are the Balatro "boss blind" energy. They shouldn't appear every turn. When they do appear, the player should feel their pulse rise. The key insight: Gambits feel fair because the player *could have* used Intel first. If they didn't, they chose to gamble blind.
+
+---
+
+### 4.10 The Heat Meter
+
+<!-- [ENGINE] — Global escalation pressure system. The walls always close in. -->
+
+The Heat Meter is a **global, ever-increasing pressure system** that prevents turtling, forces aggressive play, and creates a sense of mounting dread across the campaign.
+
+#### How Heat Works
+
+| Component | Rule |
+|---|---|
+| **Heat starts at** | 0 at Level 1. Carries across levels within an Act. Resets at Act boundaries. |
+| **Heat increases by** | +1 every turn (automatic). +1 per War played. +1 per territory lost. +2 per Police-type event triggered. |
+| **Heat decreases by** | -1 per successful Peace alliance. -1 per Ghost move. -2 per level completed (completion bonus). |
+| **Heat cap** | 20 per Act. At 20, permanent "Federal Indictment" event triggers (see below). |
+
+#### Heat Thresholds — Permanent Modifiers
+
+| Heat Level | Threshold | Global Modifier | Narrative Flavor |
+|---|---|---|---|
+| **Low Heat** | 0–4 | None. Streets are calm. | "Nobody's watching. Move freely." |
+| **Warm** | 5–8 | All People Cards cost +1 Influence to play. | "Undercovers are multiplying. Every move gets noticed." |
+| **Hot** | 9–13 | Rival factions coordinate — Street Whispers can target 2 blocks simultaneously. Status Cards shuffle into your deck every 2 turns. | "Corner boys are getting picked up. The block is paranoid." |
+| **On Fire** | 14–17 | Intel Cards cost double. People Card loyalty decays by 1 per turn (people are scared). | "Everybody's a liability. One phone call from folding." |
+| **Federal** | 18–20 | **Federal Indictment** — player has 3 turns to complete the level or auto-lose. Clock cannot be extended. | "The feds have the wiretap transcripts. Move NOW or it's over." |
+
+> **Why Heat Works:** Heat is the anti-stalling mechanic. Without it, the optimal strategy is always "play defensively, gather information, make safe choices." Heat punishes passivity. The best players learn to ride the edge — generating enough Heat to be aggressive but not so much that it spirals.
+
+---
+
+### 4.11 The Ledger — Persistent Consequences
+
+<!-- [ENGINE] — Cross-level memory system. Choices carry forward. -->
+
+The Ledger is BL0CKS' answer to the question: **"Why should I care about what happened last level?"**
+
+It tracks persistent state across the entire campaign run. The AI reads the Ledger at the start of each level and weaves it into narrative and mechanics.
+
+#### What The Ledger Tracks
+
+| Ledger Entry | Mechanical Effect | Narrative Effect |
+|---|---|---|
+| **Grudges** | If you Warred against a faction, their People Cards start with -2 visible loyalty in future levels. | NPCs reference the conflict. "Word on 79th is you hit the Lords hard. They remember." |
+| **Debts** | If you chose "Give Cut" on a People Card, that character owes you. They appear in future levels with +2 loyalty and a bonus keyword. | "Darius kept his word. He's been talking you up on the block." |
+| **Burned Bridges** | If you Exhausted a People Card, similar role/faction characters in future levels start with -1 loyalty. | "People heard what you did to Tanya. The informants don't trust you." |
+| **Reputation** | Running tally of Territory Won vs. Lost across all levels. High rep → some NPCs auto-ally (loyalty starts 8+). Low rep → harsher events. | "Your name carries weight. People hear you're coming and they step aside." |
+| **Ghost Status** | Ghosted territories may be claimed by rivals in interim. That rival now has a fortified position. | "Auburn Gresham went dark when you left. The Stones moved in." |
+| **Body Count** | People Cards lost in War → Police-type events are more frequent. | "The feds are watching your war trail." |
+| **Alliance History** | Honored Peace alliances → that faction offers better terms next time. Broken alliances → permanent enemy status. | "The Governors remember the peace you brokered at Hyde Park." |
+
+#### Ledger Format (AI State Block)
+
+```markdown
+<!-- LEDGER — Persistent across campaign run -->
+grudges:
+  - faction: lords, origin: level_03, severity: high
+debts:
+  - character: darius_webb, origin: level_02, type: gave_cut, bonus_keyword: rally
+burned:
+  - role: informant, count: 2, loyalty_penalty: -2
+reputation: +4 (7 won, 3 lost)
+ghost_territories: [auburn_gresham]
+body_count: 3
+alliances:
+  - faction: governors, status: honored, levels_held: 2
+heat_carried: 6
+assets_held: [greek_diner, corner_armory, og_status]
+<!-- END LEDGER -->
+```
+
+> **Why The Ledger Works:** It transforms BL0CKS from "12 disconnected puzzles" into a single, consequences-matter campaign. When a player says "I can't Burn Marcus because I already Burned two informants and my rep with that role is tanked," that's emergent strategy from persistent state. It's also the "one more level" hook — the player wants to see how their choices from Level 3 play out in Level 7.
 
 ---
 
@@ -257,11 +512,25 @@ Each card renders at **343 × 480px (mobile)** or **229 × 320px (compact hand v
 
 <!-- [ENGINE] — Act structure and info density curve are fixed. Level content is [TEMPLATE]. -->
 
-| Act | Levels | Design Intent | Info Density | Intel Cards Available |
-|---|---|---|---|---|
-| ACT I: The Corner | 1–4 | Learn the rules. Trust is cheap. | 80% visible | 4 per level |
-| ACT II: The Board | 5–9 | Alliances fracture. Everyone has an angle. | 50% visible | 2 per level |
-| ACT III: The Commission | 10–12 | Single-player survival. Trust no one. | 20% visible | 0–1 per level |
+| Act | Levels | Design Intent | Info Density | Intel Cards | Base Influence | Heat at Start | Stash Rewards |
+|---|---|---|---|---|---|---|---|
+| ACT I: The Corner | 1–4 | Learn the rules. Trust is cheap. Influence feels abundant. | 80% visible | 4 per level | 3 | 0 (fresh) | After Levels 2, 3, 4 |
+| ACT II: The Board | 5–9 | Alliances fracture. Influence feels tight. Heat builds. Keywords become essential. | 50% visible | 2 per level | 3 (or 4 w/ OG Status) | Carries from Act I | After Levels 5, 6, 7, 8 |
+| ACT III: The Commission | 10–12 | Single-player survival. Trust no one. Every Influence point is life or death. | 20% visible | 0–1 per level | 3 (Assets are your lifeline) | Carries from Act II | After Levels 10, 11 |
+
+#### Boss Encounters
+
+<!-- [ENGINE] — Boss encounters break the standard turn rhythm. They are the "set piece" moments. -->
+
+Every Act ends with a **Boss Level** — a modified level with unique rules:
+
+| Boss Level | Boss Mechanic | Special Rule | Gambit Always Available |
+|---|---|---|---|
+| **Level 4: The First Test** | A high-loyalty Informant offers to flip. Their hidden stats are completely unknown. | Player must make a Gambit decision with 0 Intel available. Success = bonus Asset. Failure = lose 1 territory. | Yes |
+| **Level 9: The Broker's Table** | Three factions simultaneously present alliance offers. Player can only accept 1. The other 2 become permanent enemies. | All 3 offers have hidden consequences that only resolve in Act III. The Ledger records all three outcomes. | Yes |
+| **Level 12: The Commission** | The player faces *every* faction simultaneously. Hidden stats are at 20% visible. No Street Whispers — intents are hidden. | Pure survival. The player's Asset collection and Ledger state determine whether this is beatable. Heat starts at 12. | Yes — every decision |
+
+> **Design Rule:** Boss Levels should feel like the final exam for the skills taught in that Act. Act I teaches basic card play → the boss tests blind trust. Act II teaches alliances and keywords → the boss tests strategic commitment. Act III tests everything simultaneously.
 
 ### 5.2 Level Markdown Architecture
 
@@ -283,14 +552,26 @@ hidden_ratio: 0.5
 intel_cards_available: 2
 clock_pressure: high
 starting_blocks: 2
+base_influence: 3
+influence_modifier: 0
+heat_starting: 6
+heat_per_turn: 1
+stash_reward_on_complete: true
+stash_pool_tier: "act_2"
+boss_encounter: false
+keywords_available: [block, connect, flip, hustle, fortify, shadow, rally]
 win_condition: control_3_blocks_without_war
 loss_condition: loyalty_below_3_on_any_held_block
 narrative_seed: alliance_collapse
 faction_event: governors_power_vacuum_triggered
 npc_count: 6
 npc_betrayal_floor: 0.3
+gambit_chance: 0.4
 secret_arc_unlock: false
 difficulty_gate: cloud_resolved
+ledger_effects:
+  - grudge_lords_applies: true
+  - debts_carry_forward: true
 ---
 
 ## Narrative Premise
@@ -298,6 +579,7 @@ difficulty_gate: cloud_resolved
 The Governors just lost their top lieutenant at 67th and Stony Island.
 Nobody knows who gave the order. Everyone has a theory.
 You have four blocks and six people who may or may not still be your people.
+Your Heat is already at 6 from the war in Act I. The block is tense.
 
 ## Win Flavor Text
 
@@ -309,9 +591,11 @@ You have four blocks and six people who may or may not still be your people.
 
 ## Special Rules
 
-- Any War card played in this level has a 40% chance of triggering a Police Raid event
+- Any War card played in this level has a 40% chance of triggering a Police Raid event (+2 Heat)
 - The Snitch move costs 3 clock ticks instead of 2 (heat is high)
 - One NPC in this level has a hidden Commission allegiance (AI assigns at session start)
+- If Ledger shows grudge against Lords: Lords NPCs start with -2 loyalty
+- If Ledger shows debt from Darius Webb: Darius appears with +2 loyalty and Rally keyword
 ```
 
 ### 5.3 Difficulty Scaling Rules
@@ -1251,48 +1535,108 @@ The entire game engine runs as a **structured AI conversation**. The Markdown fi
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   BL0CKS · Level 5 · Woodlawn Fracture
   🕐 Clock: 8/12 ticks · Act II
+  💪 Influence: ●●●○○○ (3/6)
+  🔥 Heat: ██████░░░░░░░░░░░░░░ 6/20 [WARM]
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📍 TERRITORY
-  ● Woodlawn — YOU (Governors)
+  ● Woodlawn — YOU (Governors) · ⛨ 2 Block Points
   ● Auburn Gresham — YOU (Governors)
   ○ Englewood — RIVAL (Lords)
   ◑ Chatham — CONTESTED
   ◐ Hyde Park — NEUTRAL
   ○ Roseland — RIVAL (Stones)
 
-📻 POLICE SCANNER: "71st & Cottage — units moving south"
+📻 STREET WHISPER: [INTENT: ASSAULT] "The Lords are
+   massing foot soldiers at 79th. Auburn Gresham will
+   fall at end of turn if you don't Block or Stack it."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚡ EVENT: POWER VACUUM
 The Governors just lost their top lieutenant.
-Nobody knows who gave the order.
+Nobody knows who gave the order. +1 Heat.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 🃏 YOUR HAND:
-  1. 👤 Darius Webb — Broker · Woodlawn · Loyalty 8/10
-  2. 👤 Marcus Cole — Enforcer · Englewood · Loyalty 5/10
-  3. 👤 Tanya Rivers — Informant · Chatham · Loyalty 7/10
-  4. ⚔️ TAX — Collect from a controlled block
-  5. ⚔️ WAR — Challenge a rival block
+  1. 👤 Darius Webb — Broker ◆CONNECT · Woodlawn
+     Loyalty 8/10 · Cost: ●○○ (1 Inf)
+  2. 👤 Marcus Cole — Enforcer ⛨BLOCK · Englewood
+     Loyalty 5/10 · Cost: ●●○ (2 Inf)
+  3. 👤 Tanya Rivers — Informant 💰HUSTLE · Chatham
+     Loyalty 7/10 · Cost: ●○○ (1 Inf)
+  4. ⚔️ TAX — Cost: ●○○ (1 Inf) · Collect resources
+  5. ⚔️ WAR — Cost: ●●● (3 Inf) · Challenge rival block
 
 🔒 Intel Cards remaining: 2
+🏆 Active Assets: 🍽️ Greek Diner · 🔫 Corner Armory
 
-What do you play? (1-5, or type INTEL to reveal a hidden stat)
+PHASE 5 — ACT. You have 3 Influence. Spend wisely.
+What do you play? (1-5, or type INTEL [Name])
+(Play multiple cards by chaining: "2, 4" = Marcus + Tax)
 ```
 
-**What happens after a choice:**
+**What happens after a People Card choice:**
 
 ```
-> You played: 👤 Darius Webb
+> You played: 👤 Darius Webb (◆ CONNECT) — Cost 1 Influence
+  Remaining Influence: ●●○○○○ (2/6)
+
+ᐅ CONNECT triggered: Darius reveals that Marcus Cole
+  has a hidden allegiance to... [LOCKED — spend Intel
+  to see, or take the Gambit]
 
 Darius wants a cut of the Woodlawn block.
 Says he's earned it. You decide.
 
-  ← [A] DENY — "He goes cold. Loyalty -2."
-  → [B] GIVE CUT — "He stacks for you. +1 loyalty."
+  ← [A] DENY — "He goes cold. Loyalty -2. No Heat."
+  → [B] GIVE CUT — "He stacks for you. +1 loyalty.
+     Ledger: Darius owes you a debt."
+  🎲 [G] GAMBIT: DOUBLE DOWN — "Offer him the WHOLE
+     block. If his hidden loyalty is ≥ 6, he swears a
+     blood oath (+4 loyalty, gains ⛨ BLOCK keyword).
+     If < 6... he takes it and flips. Woodlawn is gone."
 
-Your call? (A or B)
+Your call? (A, B, or G) — then continue playing cards
+```
+
+**What happens at end of turn (Phase 8-10 resolution):**
+
+```
+━━━━━ TURN RESOLUTION ━━━━━
+ᐅ COMBO CHECK: ◆ CONNECT resolved (Darius intel).
+ᐅ INTENT RESOLVES: Auburn Gresham — BLOCKED by Marcus.
+  ⛨ 3 Block Points absorbed the Lords' assault.
+  Auburn Gresham holds. Lords retreat.
+ᐅ HEAT CHECK: 🔥 6 → 7 (+1 auto). Still [WARM].
+  Modifier: People Cards cost +1 Influence at WARM.
+ᐅ CLOCK: 8/12 → 6/12 (2 ticks consumed this turn).
+ᐅ LEDGER UPDATED: Darius — debt recorded.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+         → Next turn begins...
+```
+
+**What happens after level complete (The Stash):**
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✦ LEVEL 5 COMPLETE — WOODLAWN FRACTURE
+  "You read the room before the room read you."
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 LEVEL STATS:
+  Turns taken: 8 · Heat generated: 4
+  Territory: 3 held, 1 lost, 2 rival
+  Gambits taken: 1 (WON) · Cards exhausted: 2
+
+━━━ THE STASH ━━━
+Choose 1 Asset. This is permanent for your run.
+
+  [A] 📱 BURNER NETWORK — Hand size +1 (draw 6).
+      Must Exhaust 1 card at start of each level.
+  [B] 💸 THE PLUG — Tax generates double from first block.
+  [C] 🏠 SAFE HOUSE — Lose a territory? 1 crew escapes.
+
+Your pick? (A, B, or C)
 ```
 
 **How this maps to the visual UI later:**
@@ -1300,26 +1644,33 @@ Your call? (A or B)
 | Chat Element | Visual UI Equivalent |
 |---|---|
 | Text territory grid | SVG territory map (Zone 4) |
-| Numbered card list | Hand Tray (Zone 5) |
-| A/B choice prompt | Reigns-style swipe overlay |
+| Numbered card list with cost pips | Hand Tray (Zone 5) with Influence cost badges |
+| A/B/G choice prompt | Reigns-style swipe overlay + Gambit button |
 | Narrated consequences | Consequence cascade animation |
 | `[HIDDEN] ???` text | Locked hidden stats panel |
 | `INTEL` command | Intel Card reveal button |
-| Police scanner text line | Event Ticker (Zone 2) |
+| Street Whisper intent line | Event Ticker (Zone 2) with intent badge |
 | Clock tick counter | Clock Bar (Zone 3) |
+| Influence pip display | Influence meter in nav bar |
+| Heat meter progress bar | Heat gauge (new Zone 3b) |
+| Keyword badges on cards | Icon badges on card face |
+| The Stash reward screen | Full-screen modal with card-flip reveal |
+| Asset list display | Asset tray in side drawer |
+| Ledger updates | Persistent notification toasts |
 
 **Chat-first design constraints:**
 - All game state must be expressible as plain text — no binary state
 - All player inputs must be simple text commands or numbered choices
 - The AI must maintain session state within the conversation context
 - Level files, card templates, and prompt files serve as the AI's "game ROM"
-- A single system prompt + level file must be sufficient to start a session
+- A single system prompt + level file + Ledger state must be sufficient to start a session
+- Influence, Heat, and Ledger values must be displayed every turn — never hidden from player
 
 ### 13.2 Build Roadmap
 
 | Phase | Milestone | Key Deliverables | Est. Duration | MVP? |
 |---|---|---|---|---|
-| **Phase 0** | Concept + Architecture | GDD v2.0 complete, card schema, world bible, JWT spec | Complete | ✅ |
+| **Phase 0** | Concept + Architecture | GDD v3.0 complete (mechanics-integrated), card schema, world bible, JWT spec | Complete | ✅ |
 | **Phase 1** | Chat-Playable Engine | System prompts, level files, card templates, character files — full Act I playable in any AI chat | 4–6 weeks | ✅ |
 | **Phase 2** | Full Chat Campaign | All 12 levels playable in chat, Card Creation via chat prompts, 60-card base set | 6–8 weeks | ✅ |
 | **Phase 3** | Visual UI — Mobile App | Mobile card renderer, swipe mechanics, territory map, onboarding flow (Section 12) | 8–10 weeks | ✅ |
@@ -1460,31 +1811,39 @@ The following require resolution before Phase 2 development gates open:
 
 ### MVP-Critical (Resolve Before Phase 2)
 
-1. **SSO Provider Integration Scope** — Which providers offer OAuth/SSO for API access at launch? Anthropic Console, Google AI Studio, and OpenAI Platform all have OAuth flows. Define which SSO integrations ship in MVP vs. which fall back to manual key entry only. **SSO should be the primary path; manual key entry is the fallback.**
+1. **Influence Balance Testing** — Is base Influence of 3 the right number? Too low = player feels helpless. Too high = no tension. Requires extensive playtesting across all 12 levels. Test with 2, 3, and 4 as base values. **This is the single most important tuning variable in the game.**
 
-2. **Offline Parity for Free Tier** — Pre-generated content packs can cover Act I offline. Acts II and III require live AI calls. Define minimum viable offline experience and pre-generation pipeline scope.
+2. **Heat Curve Per Act** — Does Heat carrying across levels within an Act create the right pressure? If Heat is too punishing, players feel unfairly punished for playing aggressively. If too lenient, the Federal Indictment threshold never matters. Playtest with Heat reset at every level vs. carry-forward.
 
-3. **Session State Serialization Format** — Game state must be JSON-serializable from Day 1 to support future multiplayer. Define the canonical state schema before Phase 1 engine work begins. This is a non-negotiable architectural constraint.
+3. **Gambit Probability Tuning** — 40% Gambit appearance rate is a starting hypothesis. Too high = dilutes impact. Too low = players forget the mechanic exists. Also: should Gambit outcome be purely hidden-stat-gated, or should there be a random component?
 
-4. **Model Fallback Chain** — When a player's primary model is rate-limited or down, define the fallback routing order. Should the game pause, degrade gracefully to a lower tier, or offer the player a choice?
+4. **Keyword Distribution Across Base Deck** — How many People Cards carry each keyword? If Block is too common, defensive play is always optimal. If Hustle is too rare, economy combos never appear. Define keyword distribution curve for the 60-card base set.
+
+5. **SSO Provider Integration Scope** — Which providers offer OAuth/SSO for API access at launch? Define which SSO integrations ship in MVP vs. manual key entry fallback.
+
+6. **Session State Serialization Format** — Game state (including Ledger, Heat, Assets, Influence modifiers) must be JSON-serializable from Day 1. Define the canonical state schema before Phase 1 engine work begins.
+
+7. **Model Fallback Chain** — When a player's primary model is rate-limited or down, define the fallback routing order.
 
 ### Post-MVP (Resolve Before Relevant Phase)
 
-5. **Multiplayer Session Architecture** — PvP mode where two players manage hidden loyalty against each other is the natural expansion. Key decisions: WebSocket vs. polling? Turn-based vs. real-time? Same-screen local multiplayer support? Define scope boundary explicitly to prevent creep in the base build. Target: Phase 8.
+8. **Asset Pool Expansion** — 12 Assets is the launch set. Plan for 24+ by Season 2. Define the Asset submission pipeline for community-created Assets.
 
-6. **Wallet Onboarding UX** — How do non-crypto players receive their first wallet without friction? Coinbase Smart Wallet is the leading candidate. Evaluate against Privy and Magic.link. Decision needed before Phase 5 spec begins.
+9. **Multiplayer Influence Economy** — In PvP, do both players share a Heat Meter? Do they have separate Influence pools? The Ledger tracks both players' actions — does one player's Grudge affect the other?
 
-7. **Pack IP Ownership** — When a community creator forks the base world and publishes a pack, who owns the IP of derivative cards? Recommend Creative Commons NC-Attribution as baseline. Decision needed before Phase 6.
+10. **The Stash UI vs. Chat** — In chat mode, The Stash is a text menu. In visual UI mode, it should feel like opening a loot crate or treasure chest. Define the animation spec and whether Assets have rarity tiers (common/rare/legendary).
 
-8. **Provider Exclusivity Window Duration** — How long is a Season? If Claude Edition is exclusive for Season 1, when does it open to other editions? Recommend 90-day windows with 30-day advance notice. Decision needed before Phase 7.
+11. **Wallet Onboarding UX** — How do non-crypto players receive their first wallet without friction? Coinbase Smart Wallet is the leading candidate.
 
-9. **Secondary Market Royalty Enforcement** — On-chain royalties are not universally enforced. Evaluate ERC-2981 enforcement on Base vs. contractual enforcement via Zora or OpenSea agreements. Legal review required before Phase 5.
+12. **Pack IP Ownership** — When a community creator forks the base world and publishes a pack, who owns the IP of derivative cards?
 
-10. **Age Verification** — M-rated content + NFT financial mechanics creates a regulatory surface in EU and certain US states. Consult legal on age-gating requirements by jurisdiction before Phase 5 launches.
+13. **Provider Exclusivity Window Duration** — How long is a Season? Recommend 90-day windows with 30-day advance notice.
+
+14. **Age Verification** — M-rated content + NFT financial mechanics creates a regulatory surface.
 
 ---
 
-*End of Document — BL0CKS GDD v2.0*
+*End of Document — BL0CKS GDD v3.0*
 *Ernesto "Beats" Rodriguez · March 2026 · Confidential*
 
 ---
@@ -1492,3 +1851,5 @@ The following require resolution before Phase 2 development gates open:
 > **Repository note:** This GDD is the source of truth for all design decisions. All implementation specs, API contracts, and design files must reference this document by version number. Breaking changes to game mechanics or monetization structure require a GDD version bump and full team review before implementation proceeds.
 >
 > **Template note:** Sections marked `[TEMPLATE]` are world-layer swappable — fork creators should replace these for their variant. Sections marked `[ENGINE]` are core mechanics — modify with caution. Sections marked `[CLOUD]` require server-side infrastructure. See Section 7.4 for the full forkability guide.
+>
+> **v3.0 note:** This revision adds 5 new mechanical systems (Influence, Keywords, Gambit, Heat, Ledger), expands Assets into The Stash, formalizes Boss Encounters, and updates all player-facing displays. The STS_MECHANICS_INTEGRATION.md document has been absorbed into this GDD. All new systems are annotated `[ENGINE]` and are core to the game's fun factor.
