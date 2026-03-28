@@ -292,12 +292,12 @@ function paintPeopleCard(buf, cx, cy, card, idx) {
 
   // Row 4: Block/Location
   const block = (card.block || '').substring(0, inner - 3);
-  bStr(buf, cx + 1, cy + 4, `  ${block.padEnd(inner - 3)}`, A.gray, cardBg);
+  bStr(buf, cx + 1, cy + 4, `  ${block.padEnd(inner - 3)}`, A.chalk, cardBg);
 
   // Row 5: Loyalty label
   const loy = card.loyalty != null ? card.loyalty : '?';
   const loyStr = `  Loy: ${loy}`;
-  bStr(buf, cx + 1, cy + 5, loyStr.padEnd(inner), A.gray, cardBg);
+  bStr(buf, cx + 1, cy + 5, loyStr.padEnd(inner), A.chalk, cardBg);
 
   // Row 6: Loyalty bar
   const loyVal = typeof loy === 'number' ? loy : 5;
@@ -348,7 +348,7 @@ function paintMoveCard(buf, cx, cy, card, idx) {
   const descLines = wordWrap(desc, inner - 3);
   for (let i = 0; i < 4; i++) {
     const text = (descLines[i] || '').padEnd(inner - 3);
-    bStr(buf, cx + 1, cy + 2 + i, `  ${text}`, i === 0 ? A.chalk : A.gray, cardBg);
+    bStr(buf, cx + 1, cy + 2 + i, `  ${text}`, A.chalk, cardBg);
   }
 
   // Row 6: Texture bar
@@ -398,7 +398,7 @@ function paintStatusCard(buf, cx, cy, card, idx) {
   const descLines = wordWrap(desc, inner - 3);
   for (let i = 0; i < 4; i++) {
     const text = (descLines[i] || '').padEnd(inner - 3);
-    bStr(buf, cx + 1, cy + 2 + i, `  ${text}`, i === 0 ? A.chalk : A.gray, cardBg);
+    bStr(buf, cx + 1, cy + 2 + i, `  ${text}`, A.chalk, cardBg);
   }
 
   // Row 6: Texture bar
