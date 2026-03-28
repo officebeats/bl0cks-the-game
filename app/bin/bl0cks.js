@@ -11,7 +11,7 @@ import { createOpenAIAdapter } from '../lib/adapters/openai.js';
 import { parseResponse } from '../lib/parser.js';
 import {
   renderBoard, renderNarrative, renderWin, renderLoss,
-  renderSplash, renderProviderSelect, renderHelp, A,
+  renderSplash, renderProviderSelect, renderMenu, renderHelp, A,
 } from '../lib/renderer.js';
 import { fetchPacks, installPack, fetchLeaderboard, submitScore } from '../lib/cloud.js';
 
@@ -102,6 +102,49 @@ async function getApiKey(provider, config) {
   console.log(`  ${A.green}✓${A.reset} Key saved to ${A.dim}~/.bl0cks/config.json${A.reset}`);
 
   return key.trim();
+}
+
+// ── Animated Menu ────────────────────────────────────────────────
+async function showAnimatedMenu(title, options) {
+  return new Promise((resolve) => {
+    let focus = 0;
+    let frame = 0;
+    let timer;
+
+    rl.pause();
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+
+    const keyListener = (str, key) => {
+      if (key && key.name === 'up') focus = (focus - 1 + options.length) % options.length;
+      else if (key && key.name === 'down') focus = (focus + 1) % options.length;
+      else if (key && key.name === 'return') {
+         cleanup();
+         resolve(options[focus].value);
+      } else if (key && key.ctrl && key.name === 'c') {
+         cleanup();
+         process.exit(1);
+      }
+    };
+
+    const cleanup = () => {
+       clearInterval(timer);
+       process.stdin.removeListener('keypress', keyListener);
+       process.stdin.setRawMode(false);
+       process.stdout.write('\x1b[?25h'); // show cursor
+       rl.resume();
+    };
+
+    process.stdin.on('keypress', keyListener);
+    process.stdout.write('\x1b[?25l'); // hide cursor
+    clear();
+
+    timer = setInterval(() => {
+      process.stdout.write('\x1b[H');
+      console.log(renderMenu(title, options, focus, frame));
+      frame++;
+    }, 70);
+  });
 }
 
 // ── Build system prompt with JSON output instructions ────────────
@@ -382,20 +425,47 @@ async function main() {
     console.log(renderSplash(f));
     await new Promise(r => setTimeout(r, 70));
   }
-  const config = loadConfig();
+  let config = loadConfig();
 
+  // ── Main Menu Loop ──
   let provider;
-  if (config.provider) {
-    provider = PROVIDERS.find(p => p.id === config.provider);
-    if (provider) {
-      console.log(`  ${A.green}✓${A.reset} Last session: ${A.bold}${provider.name}${A.reset}`);
-      const reuse = await ask(`  ${A.gold}▸${A.reset} Continue with ${provider.name}? (Y/n): `);
-      if (reuse.toLowerCase() === 'n') {
-        provider = null;
-      }
+  while (true) {
+    config = loadConfig();
+    const currentProv = config.provider ? PROVIDERS.find(p => p.id === config.provider)?.name || 'None' : 'None';
+    
+    const menuSelection = await showAnimatedMenu("MAIN MENU", [
+       { label: "New Run (Level 1)", value: "new" },
+       { label: "Resume Past Session", value: "resume" },
+       { label: `Settings (Current AI: ${currentProv})`, value: "settings" },
+       { label: "Quit", value: "quit" }
+    ]);
+
+    if (menuSelection === "quit") {
+       console.log(`\n  ${A.gray}The block remembers.${A.reset}`);
+       process.exit(0);
+    } 
+    
+    if (menuSelection === "resume") {
+       console.log(`\n  ${A.red}Resuming sessions is not yet implemented in Season 1.${A.reset}`);
+       await ask(`  ${A.dim}Press Enter to return.${A.reset}`);
+       continue;
+    }
+
+    if (menuSelection === "settings") {
+       clear();
+       const newProv = await selectProvider(config);
+       await getApiKey(newProv, config);
+       continue;
+    }
+
+    if (menuSelection === "new") {
+       break;
     }
   }
 
+  if (config.provider) {
+    provider = PROVIDERS.find(p => p.id === config.provider);
+  }
   if (!provider) {
     provider = await selectProvider(config);
   }

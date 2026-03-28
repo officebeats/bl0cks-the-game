@@ -824,6 +824,81 @@ export function renderProviderSelect(providers, savedProvider) {
   return out.join('\n');
 }
 
+// ── Animated Menu Screen ─────────────────────────────────────────
+export function renderMenu(title, options, focusIdx, frame = 0) {
+  const iW = W - 2;
+  const out = [];
+
+  out.push(doubleTop(iW));
+  out.push(doubleRow('', iW));
+
+  // Determine width of our content minus the edge bars
+  const edgeW = 10;
+  const innerContentW = iW - (edgeW * 2) - 4; // -4 for padding around edges
+
+  // Prepare the block of lines we want to show
+  const contentLines = [];
+  contentLines.push(padCenter(`${A.gold}${A.bold}${title}${A.reset}`, innerContentW + 8)); // rough padding to offset ansi
+  contentLines.push('');
+  contentLines.push('');
+
+  for (let i = 0; i < options.length; i++) {
+    const isFocused = i === focusIdx;
+    const prefix = isFocused ? `${A.green}${A.bold}▸${A.reset} ` : '  ';
+    const textColor = isFocused ? A.white : A.gray;
+    const label = `${prefix}${textColor}${options[i].label}${A.reset}`;
+    // Indent slightly from center
+    const visLenLabel = visLen(options[i].label) + 2;
+    const padding = ' '.repeat(Math.max(0, Math.floor((innerContentW - visLenLabel) / 2)));
+    contentLines.push(padding + label);
+    contentLines.push('');
+  }
+
+  // Ensure minimum height
+  const minHeight = 16;
+  while (contentLines.length < minHeight) {
+    contentLines.push('');
+  }
+
+  // Generate left/right variable typographic edges and blend with content
+  const palette = " .:-=+*#%@";
+  for (let y = 0; y < contentLines.length; y++) {
+    // Left edge
+    let leftEdge = "";
+    for (let x = 0; x < edgeW; x++) {
+      const t = frame * 0.15;
+      const noise = (Math.sin(x * 0.3 + t) + Math.cos(y * 0.3 - t) + Math.sin(x * 0.5 - y * 0.5 + t * 1.5)) / 3;
+      const pIdx = Math.floor(((noise + 1) / 2) * (palette.length - 1));
+      leftEdge += palette[Math.max(0, Math.min(palette.length - 1, pIdx))];
+    }
+
+    // Right edge
+    let rightEdge = "";
+    for (let x = 0; x < edgeW; x++) {
+      const rx = x + edgeW + innerContentW;
+      const t = frame * 0.15;
+      const noise = (Math.sin(rx * 0.3 + t) + Math.cos(y * 0.3 - t) + Math.sin(rx * 0.5 - y * 0.5 + t * 1.5)) / 3;
+      const pIdx = Math.floor(((noise + 1) / 2) * (palette.length - 1));
+      rightEdge += palette[Math.max(0, Math.min(palette.length - 1, pIdx))];
+    }
+
+    const cLineRaw = contentLines[y] || '';
+    const visCLine = visLen(cLineRaw);
+    const contentPadLeft = ' '.repeat(Math.floor((innerContentW - visCLine) / 2));
+    const contentPadRight = ' '.repeat(Math.ceil((innerContentW - visCLine) / 2));
+
+    const styledLeft = `${A.rust}${A.bold}${leftEdge}${A.reset}`;
+    const styledRight = `${A.rust}${A.bold}${rightEdge}${A.reset}`;
+
+    out.push(doubleRow(` ${styledLeft} ${contentPadLeft}${cLineRaw}${contentPadRight} ${styledRight} `, iW));
+  }
+
+  out.push(doubleRow('', iW));
+  out.push(doubleBot(iW));
+
+  return out.join('\n');
+}
+
 // ── Help Screen ──────────────────────────────────────────────────
 export function renderHelp() {
   const iW = W - 2;
