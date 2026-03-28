@@ -138,6 +138,29 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 
 ---
 
+## Screenshots
+
+<div align="center">
+
+### Splash Screen
+<img src="screenshots/splash.png" width="700" alt="BL0CKS splash screen with FIGlet ASCII logo and tagline" />
+
+### Game Board — 5-Card Fanned Hand
+<img src="screenshots/gameplay.png" width="700" alt="Full game board showing territory map, event, scanner, and fanned card hand" />
+
+### Choice Prompt
+<img src="screenshots/choice.png" width="700" alt="Game board with A/B/Burn choice prompt and 2-card hand" />
+
+### Help & Commands
+<img src="screenshots/help.png" width="700" alt="Command reference screen" />
+
+### Victory
+<img src="screenshots/victory.png" width="700" alt="Victory screen with crown and celebration" />
+
+</div>
+
+---
+
 ## How It Works
 
 **🃏 Play cards to decide.** Every turn, you're dealt a situation. Choose A or B. Each choice has consequences that ripple across the board — alliances shift, territory changes hands, and the people around you remember what you did.
@@ -226,9 +249,10 @@ Every mechanic in the game serves one of three pillars. If it doesn't touch at l
 
 ## Roadmap
 
-- [x] Game Design Document v2.0
+- [x] Game Design Document v3.0
 - [x] CLI game engine — bring your own LLM
 - [x] Published to npm — `bunx bl0cks`
+- [x] Polished CLI renderer — Termcraft-grade ASCII art with fanned card hand
 - [ ] Full 12-level campaign (Act I–III)
 - [ ] Card Creation Engine
 - [ ] Visual mobile app
