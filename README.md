@@ -96,15 +96,16 @@ Every mechanic in the game serves one of three pillars. If it doesn't touch at l
 
 ## Coming Soon
 
-BL0CKS is currently in active development. Here's what's on the roadmap:
+BL0CKS is currently in active development. The first version will be **playable entirely inside an AI chat** — Claude, Gemini, ChatGPT, or any conversational AI. No app download required. Just paste the game files into a chat and play.
+
+> 💡 **Why chat-first?** The entire game runs on Markdown files and AI. Territory maps are text grids. Cards are formatted messages. Decisions are simple choices. The visual mobile app comes later — but the game works *right now* in any AI chat window.
 
 - [x] Game Design Document v2.0 — complete
-- [ ] Core engine — Markdown parser, card renderer, AI model router
-- [ ] Act I — 4 playable levels, 60-card base set
-- [ ] Full campaign — 12 levels across 3 acts
-- [ ] Card Creation Engine — build and share your own cards
-- [ ] Edition system — unique experiences per AI provider
-- [ ] Community registry — discover player-created content
+- [ ] Chat-playable engine — system prompts, level files, card templates for Act I
+- [ ] Full chat campaign — all 12 levels playable in any AI conversation
+- [ ] Visual mobile app — card renderer, swipe mechanics, territory map
+- [ ] Multi-model routing — SSO + API key auth, edition detection
+- [ ] Card Creation Engine UI — visual card builder and community registry
 - [ ] Multiplayer — PvP hidden-loyalty mode *(future)*
 
 ---

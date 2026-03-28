@@ -1209,25 +1209,107 @@ Accessed via "ENGINE" tab in bottom nav. Requires valid JWT (API key validated).
 ## 13. Build Roadmap
 
 <!-- [ENGINE] — Phase gates are fixed. Timeline estimates are [TEMPLATE].
-     MVP FOCUS: Core gameplay loop + Card Creation Engine + AI model routing.
+     MVP FOCUS: Chat-playable game first, then visual UI.
      NFT and DLC systems are POST-MVP. Multiplayer is architecturally planned but deferred. -->
 
-> **MVP Scope:** The minimum viable product delivers the **core card game loop** (12 levels, Reigns-style decisions, hidden stat system), the **Card Creation Engine**, and the **multi-model AI routing** with SSO-first authentication. NFT achievements and DLC delivery are designed but deferred to post-MVP phases.
+> **MVP Scope — Chat-First:**
+> The first playable version of BL0CKS must be **fully playable inside an AI chat interface** — Claude, Gemini, ChatGPT, or any conversational AI. The entire game architecture is Markdown-driven, AI-resolved, and text-native. Territory maps render as text grids. Cards render as formatted message blocks. Decisions are prompted as numbered choices. Consequences are narrated. No visual UI, no mobile app, no frontend framework is required for v1.
+>
+> This is not a fallback mode — **this is the primary MVP delivery target.** The visual mobile UI (Section 12) is the *second* phase, built on top of a proven chat-playable core. This strategy validates the game loop with zero frontend engineering and ships on day one to anyone with an AI chat window.
+
+### 13.1 Chat-First Architecture — MVP Requirement
+
+<!-- [ENGINE] — This is a non-negotiable MVP constraint. The game MUST work in a plain text chat. -->
+
+The entire game engine runs as a **structured AI conversation**. The Markdown files (levels, cards, characters, prompts) are loaded into the AI's context window. The AI manages game state, resolves hidden stats, and narrates consequences — all within the chat thread.
+
+**What the player sees in chat (example turn):**
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BL0CKS · Level 5 · Woodlawn Fracture
+  🕐 Clock: 8/12 ticks · Act II
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 TERRITORY
+  ● Woodlawn — YOU (Governors)
+  ● Auburn Gresham — YOU (Governors)
+  ○ Englewood — RIVAL (Lords)
+  ◑ Chatham — CONTESTED
+  ◐ Hyde Park — NEUTRAL
+  ○ Roseland — RIVAL (Stones)
+
+📻 POLICE SCANNER: "71st & Cottage — units moving south"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ EVENT: POWER VACUUM
+The Governors just lost their top lieutenant.
+Nobody knows who gave the order.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🃏 YOUR HAND:
+  1. 👤 Darius Webb — Broker · Woodlawn · Loyalty 8/10
+  2. 👤 Marcus Cole — Enforcer · Englewood · Loyalty 5/10
+  3. 👤 Tanya Rivers — Informant · Chatham · Loyalty 7/10
+  4. ⚔️ TAX — Collect from a controlled block
+  5. ⚔️ WAR — Challenge a rival block
+
+🔒 Intel Cards remaining: 2
+
+What do you play? (1-5, or type INTEL to reveal a hidden stat)
+```
+
+**What happens after a choice:**
+
+```
+> You played: 👤 Darius Webb
+
+Darius wants a cut of the Woodlawn block.
+Says he's earned it. You decide.
+
+  ← [A] DENY — "He goes cold. Loyalty -2."
+  → [B] GIVE CUT — "He stacks for you. +1 loyalty."
+
+Your call? (A or B)
+```
+
+**How this maps to the visual UI later:**
+
+| Chat Element | Visual UI Equivalent |
+|---|---|
+| Text territory grid | SVG territory map (Zone 4) |
+| Numbered card list | Hand Tray (Zone 5) |
+| A/B choice prompt | Reigns-style swipe overlay |
+| Narrated consequences | Consequence cascade animation |
+| `[HIDDEN] ???` text | Locked hidden stats panel |
+| `INTEL` command | Intel Card reveal button |
+| Police scanner text line | Event Ticker (Zone 2) |
+| Clock tick counter | Clock Bar (Zone 3) |
+
+**Chat-first design constraints:**
+- All game state must be expressible as plain text — no binary state
+- All player inputs must be simple text commands or numbered choices
+- The AI must maintain session state within the conversation context
+- Level files, card templates, and prompt files serve as the AI's "game ROM"
+- A single system prompt + level file must be sufficient to start a session
+
+### 13.2 Build Roadmap
 
 | Phase | Milestone | Key Deliverables | Est. Duration | MVP? |
 |---|---|---|---|---|
 | **Phase 0** | Concept + Architecture | GDD v2.0 complete, card schema, world bible, JWT spec | Complete | ✅ |
-| **Phase 1** | Engine Foundation | Markdown parser, card renderer, model router, SSO + API key auth, JWT cloud endpoint | 6–8 weeks | ✅ |
-| **Phase 2** | Core Game — Act I | 3 playable levels, South Side world, 60-card base set, Reigns swipe mechanic | 8–10 weeks | ✅ |
-| **Phase 3** | Full Campaign + Creator Engine | All 12 levels, Card Creation Engine, pack export/import, community registry v1 | 8–10 weeks | ✅ |
-| **Phase 4** | Edition System + Polish | Key detection, 3 edition visual splits, CDN delivery, onboarding polish | 6–8 weeks | ✅ |
-| **Phase 5** | NFT Achievement System | Base chain contract, achievement minting, Pack Origin NFT, wallet connection | 6–8 weeks | Post-MVP |
-| **Phase 6** | DLC + Community Layer | Upvote system, AI moderation, DLC delivery pipeline, revenue share | 4–6 weeks | Post-MVP |
-| **Phase 7** | Provider Partnerships | Pitch Anthropic/Google/OpenAI on edition licensing, Season 1 DLC production | 6–8 weeks | Post-MVP |
-| **Phase 8** | Multiplayer Foundation | PvP hidden-loyalty mode, real-time session sync, matchmaking, spectator mode | 8–12 weeks | Post-MVP |
-| **Phase 9** | Full Launch | OSS engine release, hosted game live, creator marketplace, Season 1 drop | 4 weeks | Post-MVP |
+| **Phase 1** | Chat-Playable Engine | System prompts, level files, card templates, character files — full Act I playable in any AI chat | 4–6 weeks | ✅ |
+| **Phase 2** | Full Chat Campaign | All 12 levels playable in chat, Card Creation via chat prompts, 60-card base set | 6–8 weeks | ✅ |
+| **Phase 3** | Visual UI — Mobile App | Mobile card renderer, swipe mechanics, territory map, onboarding flow (Section 12) | 8–10 weeks | ✅ |
+| **Phase 4** | Multi-Model Routing + Auth | SSO + API key auth, model router, edition detection, JWT cloud endpoint | 6–8 weeks | ✅ |
+| **Phase 5** | Card Creation Engine UI | Visual card builder, pack bundling, community registry v1 | 6–8 weeks | ✅ |
+| **Phase 6** | NFT Achievement System | Base chain contract, achievement minting, Pack Origin NFT, wallet connection | 6–8 weeks | Post-MVP |
+| **Phase 7** | DLC + Community Layer | Upvote system, AI moderation, DLC delivery pipeline, revenue share | 4–6 weeks | Post-MVP |
+| **Phase 8** | Provider Partnerships | Pitch Anthropic/Google/OpenAI on edition licensing, Season 1 DLC production | 6–8 weeks | Post-MVP |
+| **Phase 9** | Multiplayer Foundation | PvP hidden-loyalty mode, real-time session sync, matchmaking, spectator mode | 8–12 weeks | Post-MVP |
+| **Phase 10** | Full Launch | OSS engine release, hosted game live, creator marketplace, Season 1 drop | 4 weeks | Post-MVP |
 
-### 13.1 Multiplayer Architecture — Design Scaffold
+### 13.3 Multiplayer Architecture — Design Scaffold
 
 <!-- [ENGINE] — Multiplayer is NOT in MVP scope but the architecture must account for it from Phase 1.
      These constraints ensure the core engine doesn't need rewriting when PvP ships. -->
