@@ -29,86 +29,23 @@
 
 BL0CKS runs in your terminal. Bring your own AI — choose Claude, Gemini, or ChatGPT.
 
-### Step 1 — Install a JavaScript Runtime
+### Step 1: Install Node.js
+If you don't have Node.js installed on your computer, you need to get it first. 
+Go to **[nodejs.org](https://nodejs.org/)**, download the **LTS** version for your computer (Windows, Mac, or Linux), and run the installer. Just click "Next" through the default settings.
 
-You need **Bun** (recommended) or **Node.js** installed. Pick one:
+### Step 2: Open your Terminal
+- **Mac:** Press `Cmd + Space`, type "Terminal", and press Enter.
+- **Windows:** Press the Start button, type "cmd", and open the Command Prompt (or Windows Terminal).
+- **Linux:** Open your favorite terminal emulator.
 
-<details open>
-<summary><strong>🍎 macOS</strong></summary>
-
-**Option A — Install Bun (recommended, fastest):**
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
-
-**Option B — Install Node.js:**
-```bash
-# Using Homebrew
-brew install node
-
-# Or download the installer from https://nodejs.org/
-```
-
-</details>
-
-<details>
-<summary><strong>🐧 Linux</strong></summary>
-
-**Option A — Install Bun (recommended, fastest):**
-```bash
-curl -fsSL https://bun.sh/install | bash
-```
-
-**Option B — Install Node.js:**
-```bash
-# Ubuntu / Debian
-sudo apt update && sudo apt install nodejs npm
-
-# Fedora
-sudo dnf install nodejs npm
-
-# Or use the official installer: https://nodejs.org/
-```
-
-</details>
-
-<details>
-<summary><strong>🪟 Windows</strong></summary>
-
-**Option A — Install Bun (recommended, fastest):**
-```powershell
-powershell -c "irm bun.sh/install.ps1 | iex"
-```
-
-**Option B — Install Node.js:**
-
-Download and run the installer from **[nodejs.org](https://nodejs.org/)** — choose the LTS version.
-
-> **Tip:** Use [Windows Terminal](https://aka.ms/terminal) for the best visual experience with BL0CKS.
-
-</details>
-
-<br>
-
-### Step 2 — Play
-
-Once your runtime is installed, open a terminal and run:
+### Step 3: Play the Game
+In your terminal, copy and paste this command and press Enter:
 
 ```bash
-# If you installed Bun
-bunx bl0cks
-
-# If you installed Node.js
 npx bl0cks
 ```
 
-That's it. The game downloads, launches, and walks you through setup.
-
-> **Want it permanently installed?** Run one of these instead:
-> ```bash
-> bun install -g bl0cks    # then just run: bl0cks
-> npm install -g bl0cks    # then just run: bl0cks
-> ```
+That's it! The game will download, launch, and walk you through the setup.
 
 <br>
 
