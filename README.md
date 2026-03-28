@@ -12,9 +12,8 @@
 
 **The first AI-powered strategy card game where every decision costs you something.**
 
-🔴 **Coming Soon — 2026**
-
----
+[![npm version](https://img.shields.io/npm/v/bl0cks)](https://www.npmjs.com/package/bl0cks)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 <br>
 
@@ -23,6 +22,89 @@
 </div>
 
 <br>
+
+---
+
+## 🎮 Play Now
+
+BL0CKS runs in your terminal. Bring your own AI — choose Claude, Gemini, or ChatGPT.
+
+### Quick Start
+
+> **Prerequisites:** Install [Node.js](https://nodejs.org/) (v18+) or [Bun](https://bun.sh/)
+
+<details>
+<summary><strong>🍎 macOS</strong></summary>
+
+```bash
+# Using Bun (recommended)
+bunx bl0cks
+
+# Using Node.js
+npx bl0cks
+```
+
+Or install globally:
+```bash
+bun install -g bl0cks    # then just run: bl0cks
+npm install -g bl0cks    # then just run: bl0cks
+```
+
+</details>
+
+<details open>
+<summary><strong>🐧 Linux</strong></summary>
+
+```bash
+# Using Bun (recommended)
+bunx bl0cks
+
+# Using Node.js
+npx bl0cks
+```
+
+Or install globally:
+```bash
+bun install -g bl0cks    # then just run: bl0cks
+npm install -g bl0cks    # then just run: bl0cks
+```
+
+</details>
+
+<details>
+<summary><strong>🪟 Windows</strong></summary>
+
+```powershell
+# Using Bun (recommended)
+bunx bl0cks
+
+# Using Node.js
+npx bl0cks
+```
+
+Or install globally:
+```powershell
+bun install -g bl0cks    # then just run: bl0cks
+npm install -g bl0cks    # then just run: bl0cks
+```
+
+> **Tip:** Use [Windows Terminal](https://aka.ms/terminal) for the best visual experience.
+
+</details>
+
+<br>
+
+### 🔑 You'll Need an API Key
+
+The game is powered by **your** AI. Grab a free key from any provider:
+
+| Provider | Get Your Key | Edition |
+|---|---|---|
+| **Google Gemini** | [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey) | Gemini Edition |
+| **Anthropic Claude** | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) | Claude Edition |
+| **OpenAI ChatGPT** | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | GPT Edition |
+
+Your key is stored locally on your machine (`~/.bl0cks/config.json`) and never sent anywhere except directly to your chosen AI provider.
 
 ---
 
@@ -40,7 +122,7 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 
 ## How It Works
 
-**🃏 Swipe to decide.** Every turn, you're dealt a situation. Swipe left to deny. Swipe right to commit. Each choice has consequences that ripple across the board — alliances shift, territory changes hands, and the people around you remember what you did.
+**🃏 Play cards to decide.** Every turn, you're dealt a situation. Choose A or B. Each choice has consequences that ripple across the board — alliances shift, territory changes hands, and the people around you remember what you did.
 
 **🗺️ Control the blocks.** The game board is a map of real South Side neighborhoods. You gain and lose territory through strategy, negotiation, and sometimes war. Every block you hold is a block someone else wants.
 
@@ -50,18 +132,25 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 
 ---
 
+## In-Game Commands
+
+| Command | Action |
+|---|---|
+| `1` – `5` | Play a card from your hand |
+| `A` or `B` | Make a choice when prompted |
+| `INTEL [Name]` | Spend an Intel Card to reveal hidden stats |
+| `help` | Show all commands |
+| `quit` | Exit the game |
+
+> The AI is the game engine. You can also type naturally — it understands strategy, threats, and negotiation.
+
+---
+
 ## What Makes BL0CKS Different
 
 ### 🤖 Powered By Your AI
 
 BL0CKS doesn't lock you into one AI service. **You bring your own.** Connect your Claude, Gemini, or ChatGPT account and the game adapts to your model's strengths. Better AI means deeper stories, smarter characters, and more unpredictable betrayals.
-
-Sign in with your AI provider or paste an API key — either way, you're in.
-
-> **🔑 How to get your API Key (It's free to start):**
-> - **Google Gemini:** Get your key at [Google AI Studio](https://aistudio.google.com/app/apikey). *(Note: If you get a "model not found" error, make sure you are using `gemini-1.5-pro-latest` or `gemini-1.5-pro-002` as your model string).*
-> - **Anthropic Claude:** Get your key at [Anthropic Console](https://console.anthropic.com/settings/keys).
-> - **OpenAI ChatGPT:** Get your key at [OpenAI Platform](https://platform.openai.com/api-keys).
 
 ### 🎴 No Two Games Are The Same
 
@@ -105,19 +194,15 @@ Every mechanic in the game serves one of three pillars. If it doesn't touch at l
 
 ---
 
-## Coming Soon
+## Roadmap
 
-BL0CKS is currently in active development. The first version will be **playable entirely inside an AI chat** — Claude, Gemini, ChatGPT, or any conversational AI. No app download required. Just paste the game files into a chat and play.
-
-> 💡 **Why chat-first?** The entire game runs on Markdown files and AI. Territory maps are text grids. Cards are formatted messages. Decisions are simple choices. The visual mobile app comes later — but the game works *right now* in any AI chat window.
-
-- [x] Game Design Document v2.0 — complete
-- [ ] Chat-playable engine — system prompts, level files, card templates for Act I
-- [ ] Full chat campaign — all 12 levels playable in any AI conversation
-- [ ] Visual mobile app — card renderer, swipe mechanics, territory map
-- [ ] Multi-model routing — SSO + API key auth, edition detection
-- [ ] Card Creation Engine UI — visual card builder and community registry
-- [ ] Multiplayer — PvP hidden-loyalty mode *(future)*
+- [x] Game Design Document v2.0
+- [x] CLI game engine — bring your own LLM
+- [x] Published to npm — `bunx bl0cks`
+- [ ] Full 12-level campaign (Act I–III)
+- [ ] Card Creation Engine
+- [ ] Visual mobile app
+- [ ] Multiplayer — PvP hidden-loyalty mode
 
 ---
 
@@ -130,8 +215,8 @@ Want to build your own version? Clone the repo, swap the world files, keep the e
 ```
 /world/territories.md    ← Your neighborhoods
 /world/factions.md       ← Your power players  
-/cards/templates/        ← Your card formats
 /levels/                 ← Your story
+/app/                    ← The game engine
 ```
 
 Full architecture details are in the [Game Design Document](GDD.md).
@@ -140,7 +225,7 @@ Full architecture details are in the [Game Design Document](GDD.md).
 
 <div align="center">
 
-### 🔴 BL0CKS — Coming 2026
+### 🔴 BL0CKS
 
 **A game about trust in a world where everyone's playing their own game.**
 
@@ -148,8 +233,10 @@ Built by [Ernesto "Beats" Rodriguez](https://github.com/officebeats)
 
 ---
 
-*This project is in active development and not yet available for public play.*  
-*Star this repo to get notified when we launch.*
+```bash
+bunx bl0cks
+```
+
+*Play now. Trust no one.*
 
 </div>
-
