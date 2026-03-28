@@ -13,6 +13,7 @@ import {
   renderBoard, renderNarrative, renderWin, renderLoss,
   renderSplash, renderProviderSelect, A,
 } from '../lib/renderer.js';
+import { fetchPacks, installPack, fetchLeaderboard, submitScore } from '../lib/cloud.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -273,6 +274,27 @@ async function gameLoop(adapter, levelPath) {
 
       // Check for game end
       if (state.outcome === 'win' || state.outcome === 'loss') {
+        if (state.outcome === 'win') {
+          // Calculate score
+          const tTicks = state.clock?.total || 12;
+          const cTicks = state.clock?.current || 0;
+          const ticks = Math.max(0, tTicks - cTicks);
+          const territories = (state.territories || []).filter(t => t.control === 'you').length;
+          const peopleCards = (state.hand || []).filter(c => c.type === 'people');
+          const loyAvg = peopleCards.reduce((acc, c) => acc + (c.loyalty && c.loyalty !== '?' ? c.loyalty : 0), 0) / Math.max(1, peopleCards.length);
+          const totalScore = (ticks * 1000) + (territories * 2000) + (loyAvg * 500);
+          
+          console.log(`\n  ${A.gold}★ FINAL SCORE: ${Math.round(totalScore)} ★${A.reset}`);
+          const alias = await ask(`  ${A.green}Enter your tag for the streets (Leaderboard):${A.reset} `);
+          if (alias.trim()) {
+            await submitScore(levelPath, alias.trim(), {
+              levelName: state.levelName,
+              total: Math.round(totalScore),
+              ticks, territories, loyalty: loyAvg
+            });
+            console.log(`  ${A.dim}Score submitted to the underground.${A.reset}`);
+          }
+        }
         console.log(`\n  ${A.dim}Press Enter to exit.${A.reset}`);
         await ask('');
         break;
@@ -289,12 +311,64 @@ async function gameLoop(adapter, levelPath) {
 
 // ── Main ─────────────────────────────────────────────────────────
 async function main() {
+  const args = process.argv.slice(2);
+  let levelPath = '1';
+
+  // ── Process Core Cloud Commands ──
+  if (args.length > 0) {
+    if (args[0] === 'market' && args[1] === 'browse') {
+      console.log(`\n  ${A.gold}🔌 Accessing The Streets (Marketplace)...${A.reset}\n`);
+      const packs = await fetchPacks();
+      for (const p of packs) {
+        console.log(`  ${A.green}• ${A.bold}${p.pack_id}${A.reset}`);
+        console.log(`    ${A.white}${p.title}${A.reset} ${A.dim}by @${p.author}${A.reset}`);
+        console.log(`    ${A.gray}${p.description}${A.reset}`);
+        console.log(`    ${A.dim}↓ ${p.downloads} downloads${A.reset}\n`);
+      }
+      console.log(`  ${A.dim}Type \`bl0cks market install <pack_id>\` to download.${A.reset}\n`);
+      process.exit(0);
+    }
+    
+    if (args[0] === 'market' && args[1] === 'install') {
+      const targetPack = args[2];
+      if (!targetPack) {
+        console.log(`  ${A.red}Please specify a pack_id to install.${A.reset}`);
+        process.exit(1);
+      }
+      console.log(`\n  ${A.gold}🔌 Downloading ${targetPack}...${A.reset}`);
+      const dest = await installPack(targetPack);
+      console.log(`  ${A.green}✓ Installed to ${dest}${A.reset}`);
+      console.log(`  ${A.dim}Type \`bl0cks play ${dest}\` to start.${A.reset}\n`);
+      process.exit(0);
+    }
+
+    if (args[0] === 'leaderboard') {
+      const targetPack = args[1] || 'base-chicago';
+      console.log(`\n  ${A.gold}🏆 THE WIRE: Global Rankings for ${targetPack}${A.reset}\n`);
+      const board = await fetchLeaderboard(targetPack);
+      let rank = 1;
+      for (const score of board) {
+        console.log(`  ${A.dim}${rank}.${A.reset} ${A.bold}${score.player_alias}${A.reset} — ${A.green}${score.score_total}${A.reset} ${A.dim}(T:${score.territories_held}  Date:${new Date(score.run_date).toLocaleDateString()})${A.reset}`);
+        rank++;
+      }
+      console.log('');
+      process.exit(0);
+    }
+
+    // Otherwise treat as a game execution command
+    if (args[0] === 'play' && args[1]) {
+      levelPath = args[1];
+    } else if (args[0] !== 'play') {
+      levelPath = args[0];
+    }
+  }
+
+  // ── Regular Game Flow ──
   const config = loadConfig();
 
   clear();
   console.log(renderSplash());
 
-  // Quick-start if provider is saved
   let provider;
   if (config.provider) {
     provider = PROVIDERS.find(p => p.id === config.provider);
@@ -315,16 +389,6 @@ async function main() {
   const adapter = createAdapter(provider.id, apiKey);
 
   console.log(`\n  ${A.green}✓${A.reset} ${A.bold}${provider.name}${A.reset} connected · ${A.dim}${provider.tier} tier${A.reset}`);
-
-  const args = process.argv.slice(2);
-  let levelPath = '1';
-  if (args.length > 0) {
-    if (args[0] === 'play' && args[1]) {
-      levelPath = args[1];
-    } else if (args[0] !== 'play') {
-      levelPath = args[0];
-    }
-  }
 
   await gameLoop(adapter, levelPath);
 }

@@ -150,17 +150,27 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 
 ---
 
-## In-Game Commands
+## CLI Commands
 
+### Playing the Game
 | Command | Action |
 |---|---|
+| `bl0cks` | Play the default "The Corner" campaign |
+| `bl0cks play <file.md>` | Play a custom markdown level |
 | `1` – `5` | Play a card from your hand |
-| `A` or `B` | Make a choice when prompted |
+| `A`, `B`, or `BURN` | Make a choice when prompted |
 | `INTEL [Name]` | Spend an Intel Card to reveal hidden stats |
-| `help` | Show all commands |
+| `help` | Show all in-game commands |
 | `quit` | Exit the game |
 
 > The AI is the game engine. You can also type naturally — it understands strategy, threats, and negotiation.
+
+### The Streets (Cloud Network)
+| Command | Action |
+|---|---|
+| `bl0cks market browse` | View available community campaigns |
+| `bl0cks market install <id>` | Download a community cartridge |
+| `bl0cks leaderboard [id]` | View the top scores for a specific cartridge |
 
 ---
 
