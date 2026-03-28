@@ -2,7 +2,7 @@
 
 import { createInterface } from 'readline';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { homedir } from 'os';
 import { createGeminiAdapter } from '../lib/adapters/gemini.js';
@@ -157,14 +157,17 @@ RULES FOR THE JSON:
   return `${systemPrompt}\n\n${jsonDirective}\n\n---\n\n${territories}\n\n---\n\n${factions}`;
 }
 
-function loadLevel(levelNum) {
-  const levelFiles = { 1: 'levels/level_01_the_corner.md' };
-  const file = levelFiles[levelNum];
-  if (!file) {
-    console.log(`  ${A.red}Level ${levelNum} not available yet.${A.reset}`);
+function loadLevel(pathOrId) {
+  if (pathOrId === '1' || pathOrId === 1) {
+    return loadGameFile('levels/level_01_the_corner.md');
+  }
+
+  const fullPath = resolve(process.cwd(), String(pathOrId));
+  if (!existsSync(fullPath)) {
+    console.log(`  ${A.red}Cannot find level cartridge at: ${fullPath}${A.reset}`);
     return null;
   }
-  return loadGameFile(file);
+  return readFileSync(fullPath, 'utf-8');
 }
 
 // ── Create AI adapter ────────────────────────────────────────────
@@ -225,14 +228,14 @@ ${A.gray}╚${'═'.repeat(iW)}╝${A.reset}
 }
 
 // ── Game loop ────────────────────────────────────────────────────
-async function gameLoop(adapter) {
+async function gameLoop(adapter, levelPath) {
   const systemPrompt = buildSystemPrompt();
-  const levelContent = loadLevel(1);
+  const levelContent = loadLevel(levelPath);
   if (!levelContent) process.exit(1);
 
   clear();
   console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
-  console.log(`  ${A.gold}${A.bold}Loading Level 1: The Corner${A.reset}`);
+  console.log(`  ${A.gold}${A.bold}Booting BL0CKS Cartridge: ${levelPath === '1' ? 'Level 1: The Corner' : levelPath}${A.reset}`);
   console.log(`  ${A.dim}Connecting to ${adapter.name}...${A.reset}`);
   console.log(`  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}\n`);
 
@@ -313,7 +316,17 @@ async function main() {
 
   console.log(`\n  ${A.green}✓${A.reset} ${A.bold}${provider.name}${A.reset} connected · ${A.dim}${provider.tier} tier${A.reset}`);
 
-  await gameLoop(adapter);
+  const args = process.argv.slice(2);
+  let levelPath = '1';
+  if (args.length > 0) {
+    if (args[0] === 'play' && args[1]) {
+      levelPath = args[1];
+    } else if (args[0] !== 'play') {
+      levelPath = args[0];
+    }
+  }
+
+  await gameLoop(adapter, levelPath);
 }
 
 main().catch(err => {
