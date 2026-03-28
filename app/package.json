@@ -1,0 +1,27 @@
+{
+  "name": "bl0cks",
+  "version": "1.0.0",
+  "description": "BL0CKS — The first AI-powered strategy card game. Bring your own LLM.",
+  "type": "module",
+  "bin": {
+    "bl0cks": "./bin/bl0cks.js"
+  },
+  "scripts": {
+    "start": "node bin/bl0cks.js",
+    "play": "node bin/bl0cks.js"
+  },
+  "keywords": [
+    "game",
+    "ai",
+    "strategy",
+    "cards",
+    "cli"
+  ],
+  "author": "Ernesto 'Beats' Rodriguez",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/generative-ai": "^0.24.0",
+    "openai": "^4.86.2"
+  }
+}
