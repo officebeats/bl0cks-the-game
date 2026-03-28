@@ -155,7 +155,8 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 ### Playing the Game
 | Command | Action |
 |---|---|
-| `bl0cks` | Play the default "The Corner" campaign |
+| `bl0cks` | Play Level 1: "The Corner" |
+| `bl0cks play 2` | Play Level 2: "The Wire" (Defensive Scenario) |
 | `bl0cks play <file.md>` | Play a custom markdown level |
 | `1` – `5` | Play a card from your hand |
 | `A`, `B`, or `BURN` | Make a choice when prompted |
@@ -168,6 +169,7 @@ Your job is to figure out who's loyal, who's lying, and who's about to flip on y
 ### The Streets (Cloud Network)
 | Command | Action |
 |---|---|
+| `bl0cks cloud login` | Enter your Supabase keys for live network access |
 | `bl0cks market browse` | View available community campaigns |
 | `bl0cks market install <id>` | Download a community cartridge |
 | `bl0cks leaderboard [id]` | View the top scores for a specific cartridge |

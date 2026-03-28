@@ -162,6 +162,9 @@ function loadLevel(pathOrId) {
   if (pathOrId === '1' || pathOrId === 1) {
     return loadGameFile('levels/level_01_the_corner.md');
   }
+  if (pathOrId === '2' || pathOrId === 2) {
+    return loadGameFile('levels/level_02_the_wire.md');
+  }
 
   const fullPath = resolve(process.cwd(), String(pathOrId));
   if (!existsSync(fullPath)) {
@@ -236,7 +239,10 @@ async function gameLoop(adapter, levelPath) {
 
   clear();
   console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
-  console.log(`  ${A.gold}${A.bold}Booting BL0CKS Cartridge: ${levelPath === '1' ? 'Level 1: The Corner' : levelPath}${A.reset}`);
+  let bootName = levelPath;
+  if (levelPath === '1' || levelPath === 1) bootName = 'Level 1: The Corner';
+  if (levelPath === '2' || levelPath === 2) bootName = 'Level 2: The Wire';
+  console.log(`  ${A.gold}${A.bold}Booting BL0CKS Cartridge: ${bootName}${A.reset}`);
   console.log(`  ${A.dim}Connecting to ${adapter.name}...${A.reset}`);
   console.log(`  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}\n`);
 
@@ -316,6 +322,24 @@ async function main() {
 
   // ── Process Core Cloud Commands ──
   if (args.length > 0) {
+    if (args[0] === 'cloud' && args[1] === 'login') {
+      const tempConfig = loadConfig();
+      console.log(`\n  ${A.gold}🔌 Accessing Supabase Backend${A.reset}\n`);
+      console.log(`  ${A.dim}Create a free project at supabase.com to get these keys.${A.reset}`);
+      const url = await ask(`  ${A.green}Supabase URL:${A.reset} `);
+      const key = await ask(`  ${A.green}Supabase Anon Key:${A.reset} `);
+      
+      if (url.trim() && key.trim()) {
+        tempConfig.supabaseUrl = url.trim();
+        tempConfig.supabaseKey = key.trim();
+        saveConfig(tempConfig);
+        console.log(`\n  ${A.green}✓${A.reset} Cloud configuration saved to ${A.dim}~/.bl0cks/config.json${A.reset}\n`);
+      } else {
+        console.log(`\n  ${A.red}Login aborted.${A.reset}\n`);
+      }
+      process.exit(0);
+    }
+    
     if (args[0] === 'market' && args[1] === 'browse') {
       console.log(`\n  ${A.gold}🔌 Accessing The Streets (Marketplace)...${A.reset}\n`);
       const packs = await fetchPacks();
