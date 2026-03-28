@@ -1,0 +1,37 @@
+{
+  "name": "bl0cks",
+  "version": "0.1.0",
+  "description": "BL0CKS — The first AI-powered strategy card game. Territory. Trust. Time. Bring your own LLM.",
+  "type": "module",
+  "bin": {
+    "bl0cks": "./app/bin/bl0cks.js"
+  },
+  "files": [
+    "app/bin/",
+    "app/lib/",
+    "SYSTEM_PROMPT.md",
+    "world/",
+    "levels/"
+  ],
+  "scripts": {
+    "start": "node app/bin/bl0cks.js",
+    "play": "node app/bin/bl0cks.js"
+  },
+  "keywords": ["game", "ai", "strategy", "cards", "cli", "llm", "chicago", "bl0cks"],
+  "author": "Ernesto 'Beats' Rodriguez (https://github.com/officebeats)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/officebeats/bl0cks-the-game.git"
+  },
+  "homepage": "https://github.com/officebeats/bl0cks-the-game",
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@google/generative-ai": "^0.24.0",
+    "openai": "^4.86.2"
+  }
+}
