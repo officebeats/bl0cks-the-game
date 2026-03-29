@@ -190,6 +190,7 @@ Every mechanic in the game serves one of three pillars. If it doesn't touch at l
 - [x] CLI game engine — bring your own LLM
 - [x] Published to npm — `bunx bl0cks`
 - [x] Polished CLI renderer — Termcraft-grade ASCII art with fanned card hand
+- [x] Responsive CLI renderer — fits tight 720p and mobile terminal screens without scrolling
 - [ ] Full 12-level campaign (Act I–III)
 - [ ] Card Creation Engine
 - [ ] Visual mobile app
