@@ -83,33 +83,33 @@ const PROVIDERS = [
 
 // ── Provider selection ───────────────────────────────────────────
 async function selectProvider(config) {
-  console.log(renderProviderSelect(PROVIDERS, config.provider));
+  const options = PROVIDERS.map((p) => {
+    const isSaved = config.provider === p.id ? ' [Saved]' : '';
+    return { label: `${p.name}${isSaved}`, value: p };
+  });
 
-  let choice;
-  while (true) {
-    const input = await ask(`  ${A.gold}▸${A.reset} Select provider (1-${PROVIDERS.length}): `);
-    choice = parseInt(input, 10);
-    if (choice >= 1 && choice <= PROVIDERS.length) break;
-    console.log(`  ${A.red}Invalid choice.${A.reset}`);
-  }
-  return PROVIDERS[choice - 1];
+  const selected = await showAnimatedMenu("ESTABLISH NEURAL LINK", options);
+  return selected;
 }
 
 async function getApiKey(provider, config) {
   if (config.keys?.[provider.id]) {
-    console.log(`\n  ${A.green}✓${A.reset} Found saved API key for ${provider.name}`);
-    const reuse = await ask(`  ${A.gold}▸${A.reset} Use saved key? (Y/n): `);
-    if (reuse.toLowerCase() !== 'n') {
+    const reuseOptions = [
+      { label: `Boot with saved cypher? (Y/n) - Yes`, value: true },
+      { label: `Enter new cypher`, value: false }
+    ];
+    const reuse = await showAnimatedMenu("ESTABLISH NEURAL LINK", reuseOptions);
+    if (reuse) {
       return config.keys[provider.id];
     }
   }
 
-  console.log(`\n  ${A.gray}Get your key at: ${A.white}${provider.keyUrl}${A.reset}`);
-  console.log(`  ${A.gray}Format: ${provider.keyHint}${A.reset}\n`);
-
-  const key = await ask(`  ${A.gold}▸${A.reset} Paste your API key: `);
+  const subtitle = `Get Cypher: ${provider.keyUrl}\n  Format: ${provider.keyHint}\n\n  Paste Your Cypher:`;
+  const key = await showAnimatedPrompt("ESTABLISH NEURAL LINK", subtitle);
+  
   if (!key.trim()) {
-    console.log(`  ${A.red}No key provided. Exiting.${A.reset}`);
+    clear();
+    console.log(`\n  ${A.red}Connection severed. No cypher provided. Exiting.${A.reset}`);
     process.exit(1);
   }
 
@@ -117,8 +117,10 @@ async function getApiKey(provider, config) {
   config.keys[provider.id] = key.trim();
   config.provider = provider.id;
   saveConfig(config);
-  console.log(`  ${A.green}✓${A.reset} Key saved to ${A.dim}~/.bl0cks/config.json${A.reset}`);
-
+  
+  clear();
+  console.log(`\n  ${A.green}✓${A.reset} Cypher encrypted and saved to ${A.dim}~/.bl0cks/config.json${A.reset}`);
+  await new Promise(r => setTimeout(r, 800));
   return key.trim();
 }
 
@@ -163,6 +165,93 @@ async function showAnimatedMenu(title, options) {
       frame++;
     }, 70);
   });
+}
+
+async function showAnimatedPrompt(title, subtitle) {
+  return new Promise((resolve) => {
+    let input = '';
+    let frame = 0;
+    let timer;
+
+    rl.pause();
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+
+    const keyListener = (str, key) => {
+      if (key && key.name === 'return') {
+         cleanup();
+         resolve(input);
+      } else if (key && key.name === 'backspace') {
+         input = input.slice(0, -1);
+      } else if (key && key.ctrl && key.name === 'c') {
+         cleanup();
+         process.exit(1);
+      } else if (str) {
+         const charCode = str.charCodeAt(0);
+         if (charCode >= 32 && charCode <= 126) {
+           input += str;
+         }
+      }
+    };
+
+    const cleanup = () => {
+       clearInterval(timer);
+       process.stdin.removeListener('keypress', keyListener);
+       process.stdin.setRawMode(false);
+       process.stdout.write('\x1b[?25h'); // show cursor
+       rl.resume();
+    };
+
+    process.stdin.on('keypress', keyListener);
+    process.stdout.write('\x1b[?25l'); // hide cursor
+    clear();
+
+    timer = setInterval(() => {
+      process.stdout.write('\x1b[H');
+      // We pass 1 as focusIdx so the second line (the input) gets the highlight arrow
+      const options = [
+        { label: subtitle, value: null },
+        { label: (input || '') + '█', value: null } // Blinking cursor or solid block
+      ];
+      console.log(renderMenu(title, options, 1, frame));
+      frame++;
+    }, 70);
+  });
+}
+
+async function runTutorial() {
+  await showAnimatedPrompt("NEURAL LINK: WIRETAP (TUTORIAL)", "Connection secured to the South Side.\nThe Lords in Englewood are getting bold, but nothing is moving.\nThis is a safe block to learn the ropes.\n\nPress Enter to begin:");
+
+  while (true) {
+    const res = await showAnimatedPrompt("NEURAL LINK: WIRETAP", "First, you need to know who you're dealing with.\nDarius Webb is your Broker, but what is his true motive?\n\nType 'INTEL Darius' to inspect your asset:");
+    if (res.toLowerCase().trim() === 'intel darius') break;
+  }
+  
+  await showAnimatedPrompt("NEURAL LINK: WIRETAP", ">> INTEL ACQUIRED <<\nDARIUS WEBB [Broker]\nVisible Loyalty: 8/10\nHidden Motive: Terrified of the Lords. Will sell you out if they attack.\n\nPress Enter to continue:");
+
+  while (true) {
+    const res = await showAnimatedPrompt("NEURAL LINK: WIRETAP", "Good. Now let's grab some resources.\nYou have 2 action cards in your hand: [1] TAX and [2] WAR.\n\nType '1' to play the TAX card:");
+    if (res.trim() === '1') break;
+  }
+
+  while (true) {
+    const res = await showAnimatedPrompt("NEURAL LINK: WIRETAP", "TAX Card Played.\nWho do you want to send on the run?\n\nType 'Darius' to select him:");
+    if (res.toLowerCase().trim() === 'darius') break;
+  }
+
+  await showAnimatedPrompt("NEURAL LINK: WIRETAP", ">> TAX COLLECTED <<\nDarius collected resources from Woodlawn.\nYour operation is funded.\n\nPress Enter to continue:");
+
+  while (true) {
+    const res = await showAnimatedPrompt("NEURAL LINK: WIRETAP", "Time to send a message.\n\nType '2' to play the WAR card:");
+    if (res.trim() === '2') break;
+  }
+
+  while (true) {
+    const res = await showAnimatedPrompt("NEURAL LINK: WIRETAP", "WAR Card Played.\nWhich block are you targeting?\n\nType 'Englewood' to attack the Lords:");
+    if (res.toLowerCase().trim() === 'englewood') break;
+  }
+
+  await showAnimatedPrompt("NEURAL LINK: WIRETAP", ">> WAR DECLARED <<\nEnglewood is yours. The Lords are falling back.\nTutorial Complete. You are ready for the streets.\n\nPress Enter to boot Level 1:");
 }
 
 // ── Build system prompt with JSON output instructions ────────────
@@ -220,6 +309,9 @@ RULES FOR THE JSON:
 }
 
 function loadLevel(pathOrId) {
+  if (pathOrId === '0' || pathOrId === 0) {
+    return loadGameFile('levels/level_00_tutorial.md');
+  }
   if (pathOrId === '1' || pathOrId === 1) {
     return loadGameFile('levels/level_01_the_corner.md');
   }
@@ -291,6 +383,7 @@ async function gameLoop(adapter, levelPath, resumeSession = null) {
   clear();
   console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
   let bootName = levelPath;
+  if (levelPath === '0' || levelPath === 0) bootName = 'Level 0: The Wiretap (Tutorial)';
   if (levelPath === '1' || levelPath === 1) bootName = 'Level 1: The Corner';
   if (levelPath === '2' || levelPath === 2) bootName = 'Level 2: The Wire';
   console.log(`  ${A.gold}${A.bold}Booting BL0CKS Cartridge: ${bootName}${A.reset}`);
@@ -307,9 +400,12 @@ async function gameLoop(adapter, levelPath, resumeSession = null) {
     displayResponse(initialResponse);
     saveSession(adapter.name, adapter.exportState(), levelPath);
   } catch (err) {
-    console.error(`\n  ${A.red}${A.bold}Connection failed:${A.reset} ${A.red}${err.message}${A.reset}`);
+    console.error(`\n  ${A.red}${A.bold}Neural Link Severed:${A.reset} ${A.red}${err.message}${A.reset}`);
     if (err.message.includes('401') || err.message.includes('403') || err.message.includes('invalid')) {
-      console.log(`  ${A.gray}Check that your API key is correct.${A.reset}`);
+      console.log(`  ${A.red}[!] The intel was bad. Your authorization cypher was rejected.${A.reset}`);
+      console.log(`  ${A.gray}Clear your saved cypher in Settings or check your provider dashboard.${A.reset}\n`);
+    } else {
+      console.log(`  ${A.gray}Check your connection or API provider status.${A.reset}\n`);
     }
     process.exit(1);
   }
@@ -376,7 +472,7 @@ async function gameLoop(adapter, levelPath, resumeSession = null) {
 // ── Main ─────────────────────────────────────────────────────────
 async function main() {
   const args = process.argv.slice(2);
-  let levelPath = '1';
+  let levelPath = '0';
 
   // ── Process Core Cloud Commands ──
   if (args.length > 0) {
@@ -464,7 +560,7 @@ async function main() {
     const currentProv = config.provider ? PROVIDERS.find(p => p.id === config.provider)?.name || 'None' : 'None';
     
     const menuSelection = await showAnimatedMenu("MAIN MENU", [
-       { label: "New Run (Level 1)", value: "new" },
+       { label: "New Run (Tutorial)", value: "new" },
        { label: "Resume Past Session", value: "resume" },
        { label: `Settings (Current AI: ${currentProv})`, value: "settings" },
        { label: "Quit", value: "quit" }
@@ -500,6 +596,7 @@ async function main() {
     }
 
     if (menuSelection === "new") {
+       levelPath = '0';
        break;
     }
   }
@@ -515,6 +612,11 @@ async function main() {
   const adapter = createAdapter(provider.id, apiKey);
 
   console.log(`\n  ${A.green}✓${A.reset} ${A.bold}${provider.name}${A.reset} connected · ${A.dim}${provider.tier} tier${A.reset}`);
+
+  if (levelPath === '0') {
+    await runTutorial();
+    levelPath = '1'; // Drop into Level 1 after tutorial completes
+  }
 
   await gameLoop(adapter, levelPath, resumeSessionPayload);
 }
