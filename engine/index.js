@@ -19,6 +19,18 @@ import { GameController } from './core/game.js';
 import { EventBus } from './events/emitter.js';
 import { Events } from './events/events.js';
 
+// Re-export engine subsystems for advanced consumers (ROM creators, tools, tests)
+export { CARD_TYPES, ROLES, createPeopleCard, createMoveCard, createStatusCard, createEventCard, createIntelCard, validateCard } from './cards/types.js';
+export { KEYWORDS, KEYWORD_MAP, detectCombos, applyCombos, formatKeywords, hasKeyword } from './cards/keywords.js';
+export { MOVE_SPECS, isPowered, getEffectiveCost, getMoveHeat, getMoveSpec } from './cards/moves.js';
+export { ASSET_POOL, generateStashOffers, getAsset, getEffectiveHandSize, detectAssetSynergies, formatStashScreen } from './cards/stash.js';
+export { shouldOfferGambit, generateGambit, resolveGambit, formatGambitChoice } from './cards/gambit.js';
+export { createDeck, drawToFill, drawCards, playCard, exhaustCard, injectCard, getDeckSummary, findInHand } from './cards/deck.js';
+export { HEAT_THRESHOLDS, getHeatThreshold, getActiveModifiers } from './core/heat.js';
+export { serializeLedger, createLedger } from './core/ledger.js';
+export { calculateLevelScore } from './core/scoring.js';
+export { PHASES, TurnPhaseRunner } from './core/phases.js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -146,6 +158,10 @@ export class BL0CKS {
 
   getState() {
     return this.#controller?.getState() || null;
+  }
+
+  getEngineState() {
+    return this.#controller?.getEngineState() || null;
   }
 
   // ── ROM Identity (for title screen, settings, HUD) ──

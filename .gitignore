@@ -1,13 +1,36 @@
+# Dependencies
 node_modules/
-.DS_Store
-*.log
+
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Lock files (regenerated on install)
 package-lock.json
 
-# Temp & scratch files
-logo_temp.json
-test-menu.mjs
-gen-logo.mjs
-
-# OS
+# OS files
+.DS_Store
 Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build output
+dist/
+build/
+
+# Saves & session data
+saves/
+*.session.json
+
+# Cloud credentials
+cloud/.credentials/

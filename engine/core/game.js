@@ -1,14 +1,30 @@
 /**
- * BL0CKS Game Controller
+ * BL0CKS Game Controller (v2)
  * 
  * The master game state machine. Manages the turn loop, session lifecycle,
  * and coordinates between the AI adapter, ROM content, and event bus.
+ * 
+ * v2 integrates all new engine modules:
+ *   - State manager (immutable state)
+ *   - Phase system (10-phase turn)
+ *   - Influence economy (action budget)
+ *   - Heat system (escalation pressure)
+ *   - Ledger (persistent consequences)
+ *   - Cards (keywords, combos, gambits)
+ *   - Scoring (level grades)
  * 
  * This module owns GAME LOGIC. It does not own rendering, input, or AI communication.
  */
 
 import { parseResponse } from '../ai/response-parser.js';
 import { buildSystemPrompt } from '../ai/prompt-builder.js';
+import { createState, updateState, exportState } from './state.js';
+import { PHASES, TurnPhaseRunner } from './phases.js';
+import { resetInfluence, calculateBaseInfluence } from './influence.js';
+import { increaseHeat, decreaseHeat, heatCheckPhase, getHeatThreshold, getActiveModifiers } from './heat.js';
+import { createLedger, recordLevelComplete, serializeLedger, getLoyaltyModifier, addGrudge, addDebt, addBurnedBridge, updateReputation, addGhostTerritory, incrementBodyCount, recordAlliance, addAsset } from './ledger.js';
+import { detectCombos, applyCombos } from '../cards/keywords.js';
+import { calculateLevelScore } from './scoring.js';
 
 /**
  * @typedef {Object} GameSession
@@ -27,9 +43,15 @@ export class GameController {
   #events = null;
   #currentLevel = null;
   #currentState = null;
-  #ledger = {};
+  #ledger = null;
   #turnCount = 0;
   #sessionActive = false;
+
+  // v2: Engine state tracking
+  #engineState = null;
+  #warTurns = [];      // Turn numbers where War was played
+  #playedCards = [];    // Cards played this turn (for combo detection)
+  #levelStats = null;   // Stats tracked for scoring
 
   /**
    * @param {object} adapter - AI adapter (implements adapter interface)
@@ -58,15 +80,52 @@ export class GameController {
     }
 
     this.#currentLevel = level;
-    this.#ledger = existingLedger || {};
+    this.#ledger = existingLedger || createLedger();
     this.#turnCount = 0;
     this.#sessionActive = true;
+    this.#warTurns = [];
+    this.#playedCards = [];
+    this.#levelStats = {
+      intelUsed: 0,
+      gambitsWon: 0,
+      gambitsLost: 0,
+      cardsExhausted: 0,
+      usedWar: false,
+      territoriesLost: 0,
+      peacesHonored: 0,
+    };
 
-    // Build system prompt from ROM + engine directives
+    // Initialize engine state from level config and ledger
+    const heatCarried = this.#ledger.heatCarried || 0;
+    const baseInfluence = calculateBaseInfluence(
+      this.#ledger.assetsHeld?.map(id => ({ id })) || []
+    );
+
+    this.#engineState = createState({
+      influence: baseInfluence,
+      baseInfluence,
+      heat: heatCarried,
+      clockTotal: level.content?.match(/Clock:\s*(\d+)/i)?.[1]
+        ? parseInt(level.content.match(/Clock:\s*(\d+)/i)[1])
+        : 12,
+      _meta: { romId: this.#rom._manifest.id, levelId },
+    });
+
+    // Build system prompt from ROM + engine directives + ledger
+    const ledgerMD = Object.keys(this.#ledger).length > 0 && this.#ledger.grudges?.length > 0
+      ? serializeLedger(this.#ledger)
+      : null;
+
+    const heatThreshold = getHeatThreshold(heatCarried);
+    const heatContext = heatCarried > 0
+      ? `\n\n## Heat Status\nCurrent Heat: ${heatCarried}/20 — "${heatThreshold.name}"\n${heatThreshold.flavor}\n${heatThreshold.modifier ? 'Active modifiers: ' + JSON.stringify(heatThreshold.modifier) : ''}`
+      : '';
+
     const systemPrompt = buildSystemPrompt(this.#rom, {
       romInfo: this.#romInfo,
       currentLevel: level,
-      ledger: Object.keys(this.#ledger).length > 0 ? this.#ledger : null,
+      ledger: ledgerMD,
+      engineContext: heatContext,
     });
 
     this.#events.emit('session.start', {
@@ -76,6 +135,8 @@ export class GameController {
       isDLC: level._isDLC || false,
       isCommunity: level._isCommunity || false,
       sourceROM: level._sourceROM || this.#rom._manifest.id,
+      heat: heatCarried,
+      influence: baseInfluence,
     });
 
     this.#events.emit('ai.thinking', { action: 'initializing' });
@@ -83,8 +144,16 @@ export class GameController {
     const aiResponse = await this.#adapter.start(systemPrompt, level.content);
     const state = parseResponse(aiResponse);
 
-    // Augment state with ROM identity
+    // Augment AI state with engine-tracked fields
     state._romInfo = this.#buildLevelROMInfo();
+    state._engine = {
+      influence: this.#engineState.influence,
+      maxInfluence: this.#engineState.maxInfluence,
+      heat: this.#engineState.heat,
+      heatThreshold: heatThreshold.name,
+      heatFlavor: heatThreshold.flavor,
+      phase: 'scheme',
+    };
 
     this.#currentState = state;
     this.#turnCount = 1;
@@ -108,11 +177,61 @@ export class GameController {
     this.#events.emit('action.sent', { input, turn: this.#turnCount });
     this.#events.emit('ai.thinking', { action: input });
 
+    // ── Track action for engine systems ──
+    const upperInput = input.trim().toUpperCase();
+
+    // Detect War plays for Blitz tracking
+    if (upperInput.includes('WAR') || upperInput.match(/^\d+$/) && this.#currentState?.hand) {
+      const cardIdx = parseInt(upperInput) - 1;
+      const card = this.#currentState.hand?.[cardIdx];
+      if (card?.name?.toUpperCase() === 'WAR' || upperInput.includes('WAR')) {
+        this.#warTurns.push(this.#turnCount);
+        this.#levelStats.usedWar = true;
+        // War generates heat
+        const heatResult = increaseHeat(this.#engineState, 1, 'war');
+        this.#engineState = updateState(this.#engineState, { heat: heatResult.heat });
+        if (heatResult.thresholdCrossed) {
+          this.#events.emit('heat.threshold', heatResult.thresholdCrossed);
+        }
+        this.#events.emit('heat.changed', { heat: heatResult.heat, source: 'war' });
+      }
+    }
+
+    // Detect Intel usage
+    if (upperInput.includes('INTEL')) {
+      this.#levelStats.intelUsed++;
+    }
+
+    // ── Auto heat tick (+1 per turn) ──
+    const autoHeat = heatCheckPhase(this.#engineState);
+    this.#engineState = updateState(this.#engineState, { heat: autoHeat.heat });
+    if (autoHeat.thresholdCrossed) {
+      this.#events.emit('heat.threshold', autoHeat.thresholdCrossed);
+    }
+
+    // ── Influence reset at turn start ──
+    const influenceReset = resetInfluence(this.#engineState);
+    this.#engineState = updateState(this.#engineState, influenceReset);
+
+    // ── Send to AI ──
     const aiResponse = await this.#adapter.send(input);
     const state = parseResponse(aiResponse);
 
     // Augment with ROM identity
     state._romInfo = this.#buildLevelROMInfo();
+
+    // Augment with engine state
+    const currentHeatThreshold = getHeatThreshold(this.#engineState.heat);
+    state._engine = {
+      influence: this.#engineState.influence,
+      maxInfluence: this.#engineState.maxInfluence,
+      heat: this.#engineState.heat,
+      heatThreshold: currentHeatThreshold.name,
+      heatFlavor: currentHeatThreshold.flavor,
+      modifiers: getActiveModifiers(this.#engineState.heat),
+      phase: 'scheme',
+      turn: this.#turnCount,
+    };
 
     this.#currentState = state;
     this.#turnCount++;
@@ -121,14 +240,45 @@ export class GameController {
     this.#events.emit('action.resolved', { input, state });
     this.#events.emit('turn.rendered', state);
 
-    // Check for game end
+    // ── Check for game end ──
     if (state.outcome === 'win') {
-      this.#events.emit('game.win', state);
-      this.#events.emit('game.over', { outcome: 'win', state });
+      // Calculate score
+      const score = calculateLevelScore({
+        outcome: 'win',
+        territories: state.territories || [],
+        clockRemaining: Math.max(0, (state.clock?.total || 12) - (state.clock?.current || 0)),
+        hand: state.hand || [],
+        heat: this.#engineState.heat,
+        ...this.#levelStats,
+      });
+
+      state._score = score;
+
+      // Update ledger
+      this.#ledger = recordLevelComplete(
+        this.#ledger,
+        this.#currentLevel.id,
+        'win',
+        this.#engineState.heat
+      );
+
+      this.#events.emit('game.win', { ...state, score });
+      this.#events.emit('game.over', { outcome: 'win', state, score });
       this.#sessionActive = false;
+
     } else if (state.outcome === 'loss') {
-      this.#events.emit('game.loss', state);
-      this.#events.emit('game.over', { outcome: 'loss', state });
+      const score = calculateLevelScore({ outcome: 'loss' });
+      state._score = score;
+
+      this.#ledger = recordLevelComplete(
+        this.#ledger,
+        this.#currentLevel.id,
+        'loss',
+        this.#engineState.heat
+      );
+
+      this.#events.emit('game.loss', { ...state, score });
+      this.#events.emit('game.over', { outcome: 'loss', state, score });
       this.#sessionActive = false;
     }
 
@@ -141,6 +291,14 @@ export class GameController {
    */
   getState() {
     return this.#currentState;
+  }
+
+  /**
+   * Get the engine-tracked state (influence, heat, etc.).
+   * @returns {object | null}
+   */
+  getEngineState() {
+    return this.#engineState ? exportState(this.#engineState) : null;
   }
 
   /**
@@ -192,6 +350,9 @@ export class GameController {
       adapterName: this.#adapter.name,
       adapterState: this.#adapter.exportState(),
       ledger: this.#ledger,
+      engineState: this.#engineState ? exportState(this.#engineState) : null,
+      warTurns: this.#warTurns,
+      levelStats: this.#levelStats,
       turnCount: this.#turnCount,
       timestamp: Date.now(),
     };
@@ -204,18 +365,42 @@ export class GameController {
    */
   resumeSession(session) {
     this.#currentLevel = this.#rom.levels.find(l => l.id === session.levelId);
-    this.#ledger = session.ledger || {};
+    this.#ledger = session.ledger || createLedger();
     this.#turnCount = session.turnCount || 0;
     this.#sessionActive = true;
+    this.#warTurns = session.warTurns || [];
+    this.#levelStats = session.levelStats || {
+      intelUsed: 0, gambitsWon: 0, gambitsLost: 0,
+      cardsExhausted: 0, usedWar: false, territoriesLost: 0, peacesHonored: 0,
+    };
+
+    if (session.engineState) {
+      this.#engineState = createState(session.engineState);
+    }
 
     const lastResponse = this.#adapter.resume(session.adapterState);
     this.#currentState = parseResponse(lastResponse);
     this.#currentState._romInfo = this.#buildLevelROMInfo();
 
+    // Re-augment engine state
+    if (this.#engineState) {
+      const threshold = getHeatThreshold(this.#engineState.heat);
+      this.#currentState._engine = {
+        influence: this.#engineState.influence,
+        maxInfluence: this.#engineState.maxInfluence,
+        heat: this.#engineState.heat,
+        heatThreshold: threshold.name,
+        heatFlavor: threshold.flavor,
+        phase: 'scheme',
+        turn: this.#turnCount,
+      };
+    }
+
     this.#events.emit('session.resume', {
       romId: session.romId,
       levelId: session.levelId,
       turnCount: this.#turnCount,
+      heat: this.#engineState?.heat || 0,
     });
 
     return this.#currentState;
@@ -224,7 +409,7 @@ export class GameController {
   /**
    * Get / set the persistent ledger.
    */
-  getLedger() { return { ...this.#ledger }; }
+  getLedger() { return { ...(this.#ledger || createLedger()) }; }
   setLedger(ledger) { this.#ledger = { ...ledger }; }
 
   /**
