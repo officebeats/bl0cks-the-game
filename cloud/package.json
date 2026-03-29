@@ -1,0 +1,8 @@
+{
+  "name": "@bl0cks/cloud",
+  "version": "2.0.0-alpha.1",
+  "description": "BL0CKS Cloud — Marketplace registry, leaderboard submissions, edition validation.",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT"
+}

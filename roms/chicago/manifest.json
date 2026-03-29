@@ -1,0 +1,70 @@
+{
+  "$schema": "https://bl0cks.game/schemas/rom-manifest-v1.json",
+  "format_version": 1,
+  "version": "1.0.0",
+
+  "id": "base-chicago",
+  "name": "BL0CKS: South Side",
+  "description": "The original South Side Chicago campaign. Territory. Trust. Time.",
+  "author": "Ernesto 'Beats' Rodriguez",
+  "license": "MIT",
+  "homepage": "https://github.com/officebeats/bl0cks-the-game",
+  "tags": ["strategy", "chicago", "urban", "gritty"],
+
+  "engine": {
+    "min_version": "2.0.0",
+    "max_version": "3.x"
+  },
+
+  "world": {
+    "factions": "world/factions.md",
+    "territories": "world/territories.md"
+  },
+
+  "levels": [
+    { "id": "00", "file": "levels/level_00_tutorial.md", "type": "tutorial", "name": "The Wiretap" },
+    { "id": "01", "file": "levels/level_01_the_corner.md", "type": "standard", "name": "The Corner" },
+    { "id": "02", "file": "levels/level_02_the_wire.md", "type": "standard", "name": "The Wire" }
+  ],
+
+  "prompts": {
+    "system": "prompts/system.md",
+    "narrator": "prompts/narrator.md",
+    "card_generator": "prompts/card-gen.md"
+  },
+
+  "cards": {
+    "templates_dir": "cards/templates/",
+    "custom_dir": "cards/custom/"
+  },
+
+  "assets": {
+    "theme": "assets/theme.json",
+    "audio_dir": "assets/audio/"
+  },
+
+  "extends": null,
+  "overlays": [],
+
+  "ai": {
+    "min_tier": "silver",
+    "recommended_tier": "platinum",
+    "required_capabilities": ["chat", "system_instruction"],
+    "context_budget": 32000
+  },
+
+  "difficulty": {
+    "estimated_playtime_minutes": 120,
+    "level_count": 3,
+    "hidden_ratio_range": [0.2, 0.8],
+    "recommended_experience": "beginner"
+  },
+
+  "branding": {
+    "badge_icon": "🎮",
+    "badge_label": "SOUTH SIDE",
+    "accent_color": "#C0392B",
+    "credit_line": "by Beats",
+    "splash_tagline": "Territory. Trust. Time."
+  }
+}

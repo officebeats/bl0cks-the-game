@@ -3,3 +3,11 @@ node_modules/
 *.log
 .env
 package-lock.json
+
+# Temp & scratch files
+logo_temp.json
+test-menu.mjs
+gen-logo.mjs
+
+# OS
+Thumbs.db

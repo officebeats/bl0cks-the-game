@@ -1,23 +1,21 @@
 {
-  "name": "bl0cks",
-  "version": "0.2.0",
-  "description": "BL0CKS — The first AI-powered strategy card game. Territory. Trust. Time. Bring your own LLM.",
+  "name": "bl0cks-the-game",
+  "private": true,
+  "version": "2.0.0-alpha.1",
+  "description": "BL0CKS — The first AI-powered strategy card game. Engine + ROM architecture.",
   "type": "module",
-  "bin": {
-    "bl0cks": "./app/bin/bl0cks.js"
-  },
-  "files": [
-    "app/bin/",
-    "app/lib/",
-    "SYSTEM_PROMPT.md",
-    "world/",
-    "levels/"
+  "workspaces": [
+    "engine",
+    "platforms/cli",
+    "cloud"
   ],
   "scripts": {
-    "start": "node app/bin/bl0cks.js",
-    "play": "node app/bin/bl0cks.js"
+    "start": "node platforms/cli/bin/bl0cks.js",
+    "play": "node platforms/cli/bin/bl0cks.js",
+    "test": "node --test",
+    "validate-rom": "node tools/rom-validator.mjs"
   },
-  "keywords": ["game", "ai", "strategy", "cards", "cli", "llm", "chicago", "bl0cks"],
+  "keywords": ["game", "ai", "strategy", "cards", "cli", "llm", "bl0cks", "rom"],
   "author": "Ernesto 'Beats' Rodriguez (https://github.com/officebeats)",
   "license": "MIT",
   "repository": {

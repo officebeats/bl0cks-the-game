@@ -1,0 +1,66 @@
+{
+  "$schema": "https://bl0cks.game/schemas/rom-manifest-v1.json",
+  "format_version": 1,
+  "version": "0.1.0",
+
+  "id": "{{ROM_ID}}",
+  "name": "{{ROM_NAME}}",
+  "description": "{{ROM_DESCRIPTION}}",
+  "author": "{{AUTHOR_NAME}}",
+  "license": "MIT",
+  "homepage": "",
+  "tags": ["strategy", "custom"],
+
+  "engine": {
+    "min_version": "2.0.0",
+    "max_version": "3.x"
+  },
+
+  "world": {
+    "factions": "world/factions.md",
+    "territories": "world/territories.md"
+  },
+
+  "levels": [
+    { "id": "01", "file": "levels/level_01_starter.md", "type": "standard", "name": "{{LEVEL_NAME}}" }
+  ],
+
+  "prompts": {
+    "system": "prompts/system.md",
+    "narrator": "prompts/narrator.md"
+  },
+
+  "cards": {
+    "templates_dir": "cards/templates/",
+    "custom_dir": "cards/custom/"
+  },
+
+  "assets": {
+    "theme": "assets/theme.json"
+  },
+
+  "extends": null,
+  "overlays": [],
+
+  "ai": {
+    "min_tier": "silver",
+    "recommended_tier": "gold",
+    "required_capabilities": ["chat", "system_instruction"],
+    "context_budget": 32000
+  },
+
+  "difficulty": {
+    "estimated_playtime_minutes": 30,
+    "level_count": 1,
+    "hidden_ratio_range": [0.5, 0.8],
+    "recommended_experience": "beginner"
+  },
+
+  "branding": {
+    "badge_icon": "🌐",
+    "badge_label": "{{BADGE_LABEL}}",
+    "accent_color": "#3498DB",
+    "credit_line": "by {{AUTHOR_NAME}}",
+    "splash_tagline": "{{TAGLINE}}"
+  }
+}
