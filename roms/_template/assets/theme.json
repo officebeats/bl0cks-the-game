@@ -1,24 +1,33 @@
 {
-  "colors": {
-    "bg_base": "#0D0D0D",
-    "bg_surface": "#1A1A2E",
-    "bg_elevated": "#252542",
-    "accent_red": "#E74C3C",
-    "accent_gold": "#F1C40F",
-    "text_primary": "#F2F2F2",
-    "text_secondary": "#888888",
-    "border": "#2E2E4A",
-    "success": "#27AE60",
-    "error": "#E74C3C"
+  "name": "{{ROM_NAME}}",
+  "palette": {
+    "primary": "#3498DB",
+    "secondary": "#2C3E50",
+    "accent": "#E74C3C",
+    "surface": "#1A1A2E",
+    "text": "#F2F2F2",
+    "muted": "#888888"
   },
   "factions": {
-    "faction_1": "#3498DB",
-    "faction_2": "#E74C3C",
-    "faction_3": "#F1C40F",
-    "neutral": "#888888"
+    "{{FACTION_1_ID}}": "#3498DB",
+    "{{FACTION_2_ID}}": "#E74C3C",
+    "{{FACTION_3_ID}}": "#F1C40F",
+    "{{NEUTRAL_FORCE_ID}}": "#888888",
+    "you": "#27AE60",
+    "contested": "#F39C12"
+  },
+  "ui": {
+    "card_border": "#3498DB",
+    "card_bg": "#252542",
+    "card_shadow": "#0D0D0D",
+    "territory_friendly": "#27AE60",
+    "territory_contested": "#F39C12",
+    "territory_enemy": "#E74C3C",
+    "heat_gradient": ["#27AE60", "#F1C40F", "#E67E22", "#E74C3C", "#8E44AD"]
   },
   "typography": {
     "font_family": "Space Grotesk, sans-serif",
-    "font_mono": "Space Mono, monospace"
+    "font_mono": "Space Mono, monospace",
+    "accent_chars": "▓▒░█▀▄"
   }
 }

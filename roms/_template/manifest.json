@@ -22,12 +22,14 @@
   },
 
   "levels": [
+    { "id": "00", "file": "levels/level_00_tutorial.md", "type": "tutorial", "name": "Tutorial" },
     { "id": "01", "file": "levels/level_01_starter.md", "type": "standard", "name": "{{LEVEL_NAME}}" }
   ],
 
   "prompts": {
     "system": "prompts/system.md",
-    "narrator": "prompts/narrator.md"
+    "narrator": "prompts/narrator.md",
+    "card_generator": "prompts/card-gen.md"
   },
 
   "cards": {
@@ -51,8 +53,8 @@
 
   "difficulty": {
     "estimated_playtime_minutes": 30,
-    "level_count": 1,
-    "hidden_ratio_range": [0.5, 0.8],
+    "level_count": 2,
+    "hidden_ratio_range": [0.3, 0.6],
     "recommended_experience": "beginner"
   },
 
