@@ -9,50 +9,43 @@ async function runE2E() {
     apiKey: 'mock-key' 
   });
   
-  console.log('[E2E TEST] Started Level 00 (Tutorial)...');
-  let state = await engine.startLevel('00');
-  
-  let turns = 0;
-  while (state.outcome !== 'win' && state.outcome !== 'loss' && turns < 10) {
-    turns++;
-    const actionStr = turns === 2 ? 'WIN' : 'progress game';
-    state = await engine.sendAction(actionStr);
-  }
+  const levels = engine.listLevels();
+  let currentLevelIdx = 0;
+  let currentState = await engine.startLevel(levels[currentLevelIdx].id);
 
-  if (state.outcome === 'win') {
-    console.log('[E2E TEST] ✔ Level 00 Won! Proceeding to next level in campaign...');
+  while (currentLevelIdx < levels.length) {
+    const level = levels[currentLevelIdx];
+    console.log(`[E2E TEST] Playing Level ${level.id}: ${level.name}...`);
     
-    const levels = engine.listLevels();
-    const idx = levels.findIndex(l => l.id === '00');
-    
-    if (idx !== -1 && idx < levels.length - 1) {
-      const nextId = levels[idx + 1].id;
-      console.log(`[E2E TEST] Loading next sequence: ${levels[idx+1].name} (${nextId})`);
+    let turns = 0;
+    while (currentState.outcome !== 'win' && currentState.outcome !== 'loss' && turns < 10) {
+      turns++;
+      const actionStr = turns === 2 ? 'WIN' : 'progress game';
+      currentState = await engine.sendAction(actionStr);
+    }
+
+    if (currentState.outcome === 'win') {
+      console.log(`[E2E TEST] ✔ Level ${level.id} Won!`);
       
-      const ledger = engine.getLedger();
-      engine.setLedger(ledger);
-      
-      state = await engine.startLevel(nextId);
-      console.log(`[E2E TEST] ✔ Level ${nextId} booted successfully with transferred ledger!`);
-      
-      turns = 0;
-      while (state.outcome !== 'win' && state.outcome !== 'loss' && turns < 5) {
-        turns++;
-        state = await engine.sendAction('progress game');
+      currentLevelIdx++;
+      if (currentLevelIdx < levels.length) {
+        const nextLevel = levels[currentLevelIdx];
+        console.log(`[E2E TEST] Proceeding to next level: ${nextLevel.name} (${nextLevel.id})...`);
+        
+        const ledger = engine.getLedger();
+        engine.setLedger(ledger);
+        currentState = await engine.startLevel(nextLevel.id);
+      } else {
+        console.log('[E2E TEST] ✔ All levels completed! 100% campaign completion reached.');
       }
-      
-      console.log('[E2E TEST] ✔ E2E Campaign capability successfully validated!');
     } else {
-      console.log('[E2E TEST] ✗ Failed to find next level');
+      console.log(`[E2E TEST] ✗ Level ${level.id} did not yield win state.`);
       process.exit(1);
     }
-  } else {
-    console.log('[E2E TEST] ✗ Level 00 did not yield win state.');
-    process.exit(1);
   }
   
   engine.destroy();
-  console.log('[E2E TEST] Complete.');
+  console.log('[E2E TEST] Regression test complete.');
 }
 
 runE2E().catch(console.error);

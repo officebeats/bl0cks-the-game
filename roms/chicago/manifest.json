@@ -24,7 +24,17 @@
   "levels": [
     { "id": "00", "file": "levels/level_00_tutorial.md", "type": "tutorial", "name": "The Wiretap" },
     { "id": "01", "file": "levels/level_01_the_corner.md", "type": "standard", "name": "The Corner" },
-    { "id": "02", "file": "levels/level_02_the_wire.md", "type": "standard", "name": "The Wire" }
+    { "id": "02", "file": "levels/level_02_the_wire.md", "type": "standard", "name": "The Wire" },
+    { "id": "03", "file": "levels/level_03_the_fed.md", "type": "standard", "name": "The Fed" },
+    { "id": "04", "file": "levels/level_04_the_fallout.md", "type": "standard", "name": "The Bridge" },
+    { "id": "05", "file": "levels/level_05_woodlawn_fracture.md", "type": "standard", "name": "Woodlawn Fracture" },
+    { "id": "06", "file": "levels/level_06_the_supplier.md", "type": "standard", "name": "The Supplier" },
+    { "id": "07", "file": "levels/level_07_political_play.md", "type": "standard", "name": "The Political Play" },
+    { "id": "08", "file": "levels/level_08_safe_house.md", "type": "standard", "name": "The Safe House" },
+    { "id": "09", "file": "levels/level_09_brokers_table.md", "type": "boss", "name": "The Broker's Table" },
+    { "id": "10", "file": "levels/level_10_the_indictment.md", "type": "standard", "name": "The Indictment" },
+    { "id": "11", "file": "levels/level_11_the_ghost.md", "type": "standard", "name": "The Ghost" },
+    { "id": "12", "file": "levels/level_12_the_commission.md", "type": "final", "name": "The Commission" }
   ],
 
   "prompts": {
