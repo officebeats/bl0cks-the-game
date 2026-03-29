@@ -263,7 +263,7 @@ function loyaltyBarCells(buf, x, y, value, max = 10, barW = 10) {
 
 // ── Paint People Card ────────────────────────────────────────────
 function paintPeopleCard(buf, cx, cy, card, idx) {
-  const w = CARD_W, h = CARD_H, inner = w - 2;
+  const w = getCardW(), h = CARD_H, inner = w - 2;
   const style = factionStyle(card.faction);
   const accent = style.accent || style.fg;
   const cardBg = A.bgCard;
@@ -324,7 +324,7 @@ function paintPeopleCard(buf, cx, cy, card, idx) {
 
 // ── Paint Move Card ──────────────────────────────────────────────
 function paintMoveCard(buf, cx, cy, card, idx) {
-  const w = CARD_W, h = CARD_H, inner = w - 2;
+  const w = getCardW(), h = CARD_H, inner = w - 2;
   const cardBg = A.bgCard;
   const border = A.slate;
   const accent = A.red;
@@ -375,7 +375,7 @@ function paintMoveCard(buf, cx, cy, card, idx) {
 
 // ── Paint Status Card ────────────────────────────────────────────
 function paintStatusCard(buf, cx, cy, card, idx) {
-  const w = CARD_W, h = CARD_H, inner = w - 2;
+  const w = getCardW(), h = CARD_H, inner = w - 2;
   const cardBg = A.bgCard;
   const border = A.slate;
   const accent = A.orange;
@@ -568,12 +568,14 @@ function renderTerritoryTile(territory, tileW = 24) {
 
 export function renderBoard(state) {
   const termW = getW();
+  const termH = process.stdout.rows || 30;
   const iW = termW - 2;
   const compact = termW < 70;
+  // Height-constrained: must fit above the fold
+  const tight = termH <= 30;
   const out = [];
 
   // ── Header ──
-  out.push('');
   out.push(doubleTop(iW));
 
   const levelName = state.levelName || 'The Corner';
@@ -590,125 +592,145 @@ export function renderBoard(state) {
   else if (clockRatio > 0.25) clockColor = '\x1b[38;2;255;200;40m';
   else clockColor = '\x1b[38;2;46;204;113m';
 
-  const clockBarW = compact ? 8 : 12;
+  const clockBarW = compact ? 6 : (tight ? 8 : 12);
   const clockFilled = Math.round(clockRatio * clockBarW);
   const clockEmpty = clockBarW - clockFilled;
   const clockBar = `${clockColor}${BOX.full.repeat(clockFilled)}${A.smoke}${BOX.light.repeat(clockEmpty)}${A.reset}`;
 
-  if (compact) {
-    // Two-line header for narrow terminals
-    out.push(doubleRow(`  ${A.red}${A.bold}BL0CKS${A.reset} ${A.smoke}\u2502${A.reset} ${A.white}Lv.${levelNum} ${A.chalk}${truncate(levelName, iW - 16)}${A.reset}`, iW));
-    out.push(doubleRow(`  ${A.smoke}TIME${A.reset} ${clockBar} ${clockColor}${clockCurrent}/${clockTotal}${A.reset} ${A.smoke}${truncate(clockStatus, 12)}${A.reset}`, iW));
-  } else {
-    const headerLeft = `  ${A.red}${A.bold}BL0CKS${A.reset} ${A.smoke}\u2502${A.reset} ${A.white}Lv.${levelNum} ${A.chalk}${levelName}${A.reset}`;
-    const headerRight = `${clockColor}\u23f1 ${clockCurrent}/${clockTotal}${A.reset} ${A.smoke}${clockStatus}${A.reset}  `;
-    const headerGap = iW - visLen(headerLeft) - visLen(headerRight);
-    out.push(doubleRow(headerLeft + ' '.repeat(Math.max(1, headerGap)) + headerRight, iW));
-    out.push(doubleRow(`  ${A.smoke}TIME${A.reset} ${clockBar}`, iW));
-  }
+  // Single header line with clock embedded
+  const headerLeft = `  ${A.red}${A.bold}BL0CKS${A.reset} ${A.smoke}\u2502${A.reset} ${A.white}Lv.${levelNum} ${A.chalk}${truncate(levelName, compact ? iW - 20 : 20)}${A.reset}`;
+  const headerRight = `${clockBar} ${clockColor}${clockCurrent}/${clockTotal}${A.reset} ${A.smoke}${truncate(clockStatus, 8)}${A.reset} `;
+  const headerGap = iW - visLen(headerLeft) - visLen(headerRight);
+  out.push(doubleRow(headerLeft + ' '.repeat(Math.max(1, headerGap)) + headerRight, iW));
   out.push(doubleMid(iW));
 
   // ── Territory Map ──
-  out.push(doubleRow(`  ${A.bold}${A.chalk}\u2b21 TERRITORY MAP${A.reset}`, iW));
-  out.push(doubleRow('', iW));
-
   const territories = state.territories || [];
-  // Responsive: pick columns + tile width based on terminal width
-  let tilesPerRow, tileW;
-  if (iW >= 76) {
-    tilesPerRow = 3; tileW = 24;
-  } else if (iW >= 52) {
-    tilesPerRow = 2; tileW = Math.min(24, Math.floor((iW - 6) / 2));
-  } else {
-    tilesPerRow = 1; tileW = Math.min(24, iW - 4);
-  }
-  for (let rowStart = 0; rowStart < territories.length; rowStart += tilesPerRow) {
-    const rowTs = territories.slice(rowStart, rowStart + tilesPerRow);
-    const boxes = rowTs.map(t => renderTerritoryTile(t, tileW));
-    const tileH = boxes[0]?.length || 0;
-    for (let line = 0; line < tileH; line++) {
-      let rowStr = '  ';
-      for (let t = 0; t < boxes.length; t++) {
-        rowStr += (boxes[t][line] || pad('', tileW)) + ' ';
-      }
-      out.push(doubleRow(rowStr, iW));
-    }
-    if (rowStart + tilesPerRow < territories.length) out.push(doubleRow('', iW));
-  }
-  out.push(doubleRow('', iW));
-  out.push(doubleMid(iW));
 
-  // ── Event ──
+  if (tight && territories.length > 0) {
+    // ── Inline territory rows for height-constrained screens ──
+    out.push(doubleRow(`  ${A.bold}${A.chalk}\u2b21 TERRITORIES${A.reset}`, iW));
+    for (const t of territories) {
+      const ctrl = (t.control || '').toLowerCase();
+      let icon, color;
+      if (ctrl === 'you' || ctrl === 'player') { icon = '\u25cf'; color = A.green; }
+      else if (ctrl === 'contested') { icon = '\u25d0'; color = A.amber; }
+      else if (ctrl === 'neutral') { icon = '\u25c7'; color = A.teal; }
+      else { icon = '\u25cb'; color = A.red; }
+      const name = truncate(t.name || '???', 14);
+      const ctrlText = truncate(t.control || '???', 10);
+      const faction = t.faction ? ` ${A.smoke}${t.faction}${A.reset}` : '';
+      out.push(doubleRow(`  ${color}${icon}${A.reset} ${A.chalk}${pad(name, 14)}${A.reset} ${color}${pad(ctrlText, 10)}${A.reset}${faction}`, iW));
+    }
+    out.push(doubleMid(iW));
+  } else if (territories.length > 0) {
+    // ── Full boxed territory tiles for large screens ──
+    out.push(doubleRow(`  ${A.bold}${A.chalk}\u2b21 TERRITORY MAP${A.reset}`, iW));
+    out.push(doubleRow('', iW));
+    let tilesPerRow, tileW;
+    if (iW >= 76) { tilesPerRow = 3; tileW = 24; }
+    else if (iW >= 52) { tilesPerRow = 2; tileW = Math.min(24, Math.floor((iW - 6) / 2)); }
+    else { tilesPerRow = 1; tileW = Math.min(24, iW - 4); }
+    for (let rowStart = 0; rowStart < territories.length; rowStart += tilesPerRow) {
+      const rowTs = territories.slice(rowStart, rowStart + tilesPerRow);
+      const boxes = rowTs.map(t => renderTerritoryTile(t, tileW));
+      const tileH = boxes[0]?.length || 0;
+      for (let line = 0; line < tileH; line++) {
+        let rowStr = '  ';
+        for (let t = 0; t < boxes.length; t++) {
+          rowStr += (boxes[t][line] || pad('', tileW)) + ' ';
+        }
+        out.push(doubleRow(rowStr, iW));
+      }
+      if (rowStart + tilesPerRow < territories.length) out.push(doubleRow('', iW));
+    }
+    out.push(doubleRow('', iW));
+    out.push(doubleMid(iW));
+  }
+
+  // ── Event (capped to 2 lines when tight) ──
   if (state.event) {
     const evtName = (state.event.name || 'UNKNOWN').toUpperCase();
-    out.push(doubleRow(`  ${A.ember}${A.bold}\u26a1 EVENT: ${evtName}${A.reset}`, iW));
     const desc = state.event.description || '';
-    const descLines = wordWrap(desc, iW - 6);
-    for (const dl of descLines) {
-      out.push(doubleRow(`  ${A.chalk}${BOX.sv} ${dl}${A.reset}`, iW));
+    if (tight) {
+      const shortDesc = truncate(desc, iW - visLen(evtName) - 12);
+      out.push(doubleRow(`  ${A.ember}${A.bold}\u26a1 ${evtName}${A.reset} ${A.chalk}${shortDesc}${A.reset}`, iW));
+    } else {
+      out.push(doubleRow(`  ${A.ember}${A.bold}\u26a1 EVENT: ${evtName}${A.reset}`, iW));
+      const descLines = wordWrap(desc, iW - 6);
+      for (const dl of descLines) {
+        out.push(doubleRow(`  ${A.chalk}${BOX.sv} ${dl}${A.reset}`, iW));
+      }
     }
     out.push(doubleMid(iW));
   }
 
-  // ── Scanner ──
+  // ── Scanner (capped to 1 line when tight) ──
   if (state.scanner) {
     const isIntent = state.scanner.includes('[INTENT');
-    const icon = isIntent ? '\u26a0' : '\ud83d\udcfb';
     const color = isIntent ? A.orange : A.crimson;
-    out.push(doubleRow(`  ${color}${A.bold}${icon} SCANNER${A.reset}`, iW));
-    const scanLines = wordWrap(`"${state.scanner}"`, iW - 8);
-    for (let i = 0; i < scanLines.length; i++) {
-      const pfx = i === 0 ? `${A.smoke}${BOX.medium} ` : '    ';
-      out.push(doubleRow(`  ${pfx}${A.italic}${A.chalk}${scanLines[i]}${A.reset}`, iW));
+    const icon = isIntent ? '\u26a0' : '\ud83d\udcfb';
+    if (tight) {
+      out.push(doubleRow(`  ${color}${icon}${A.reset} ${A.italic}${A.chalk}${truncate(state.scanner, iW - 8)}${A.reset}`, iW));
+    } else {
+      out.push(doubleRow(`  ${color}${A.bold}${icon} SCANNER${A.reset}`, iW));
+      const scanLines = wordWrap(`"${state.scanner}"`, iW - 8);
+      for (let i = 0; i < scanLines.length; i++) {
+        const pfx = i === 0 ? `${A.smoke}${BOX.medium} ` : '    ';
+        out.push(doubleRow(`  ${pfx}${A.italic}${A.chalk}${scanLines[i]}${A.reset}`, iW));
+      }
     }
     out.push(doubleMid(iW));
   }
 
-  // ── Fanned Hand ──
+  // ── Hand ──
   const intelCount = state.intel ?? '?';
   const intelColor = intelCount === 0 ? A.red : A.gold;
-  const handTitle = `  ${A.bold}${A.chalk}\ud83c\udccf YOUR HAND${A.reset}`;
-  const intelStr = `${intelColor}${A.bold}\u29be${A.reset} ${intelColor}Intel: ${intelCount}${A.reset}  `;
+  const handTitle = `  ${A.bold}${A.chalk}\ud83c\udccf HAND${A.reset}`;
+  const intelStr = `${intelColor}\u29be Intel:${intelCount}${A.reset} `;
   const handGap = iW - visLen(handTitle) - visLen(intelStr);
   out.push(doubleRow(handTitle + ' '.repeat(Math.max(1, handGap)) + intelStr, iW));
 
   const hand = state.hand || [];
-  const fanLines = renderFannedHand(hand, iW);
-  for (const fl of fanLines) {
-    out.push(doubleRow(fl, iW));
+  if (tight) {
+    // Always use compact hand when height-constrained
+    const compactLines = renderCompactHand(hand, iW);
+    for (const cl of compactLines) {
+      out.push(doubleRow(cl, iW));
+    }
+  } else {
+    const fanLines = renderFannedHand(hand, iW);
+    for (const fl of fanLines) {
+      out.push(doubleRow(fl, iW));
+    }
   }
 
   out.push(innerDivider(iW));
 
   // ── Choice / Prompt ──
   if (state.choice) {
-    if (state.choice.description) {
-      out.push(doubleRow('', iW));
+    if (state.choice.description && !tight) {
       const choiceDesc = wordWrap(state.choice.description, iW - 6);
       for (const cl of choiceDesc) {
         out.push(doubleRow(`  ${A.white}${cl}${A.reset}`, iW));
       }
-      out.push(doubleRow('', iW));
     }
     if (state.choice.optionA) {
-      out.push(doubleRow(`  ${A.blue}${A.bold}\u25c4 [A]${A.reset} ${A.chalk}${state.choice.optionA}${A.reset}`, iW));
+      out.push(doubleRow(`  ${A.blue}${A.bold}\u25c4 [A]${A.reset} ${A.chalk}${truncate(state.choice.optionA, iW - 12)}${A.reset}`, iW));
     }
     if (state.choice.optionB) {
-      out.push(doubleRow(`  ${A.red}${A.bold}\u25ba [B]${A.reset} ${A.chalk}${state.choice.optionB}${A.reset}`, iW));
+      out.push(doubleRow(`  ${A.red}${A.bold}\u25ba [B]${A.reset} ${A.chalk}${truncate(state.choice.optionB, iW - 12)}${A.reset}`, iW));
     }
-    if (state.choice.optionBurn) {
+    if (state.choice.optionBurn && !tight) {
       out.push(doubleRow(`  ${A.orange}${A.bold}\ud83d\uddd1 [BURN]${A.reset} ${A.smoke}${state.choice.optionBurn}${A.reset}`, iW));
     }
-    out.push(doubleRow('', iW));
     out.push(doubleRow(`  ${A.gold}${A.bold}\u25b8 Your call? (A, B, or BURN)${A.reset}`, iW));
   } else {
-    out.push(doubleRow('', iW));
     const prompt = `  ${A.gold}${A.bold}\u25b8${A.reset} ${A.chalk}Play a card ${A.gold}(1-${hand.length || 5})${A.reset}${A.chalk}, or ${A.gold}INTEL [Name]${A.reset}`;
     out.push(doubleRow(prompt, iW));
   }
 
   out.push(doubleBot(iW));
-  out.push('');
   return out.join('\n');
 }
 
