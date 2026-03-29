@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BL0CKS</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./node_modules/xterm/css/xterm.css" />
+  </head>
+  <body>
+    <!-- Terminal Area -->
+    <div id="terminal-container"></div>
+    
+    <!-- Virtual Keyboard / Cyberdeck -->
+    <div id="cyberdeck">
+      <div class="deck-row">
+        <button class="deck-btn num-btn" data-val="1">1</button>
+        <button class="deck-btn num-btn" data-val="2">2</button>
+        <button class="deck-btn num-btn" data-val="3">3</button>
+        <button class="deck-btn num-btn" data-val="4">4</button>
+        <button class="deck-btn num-btn" data-val="5">5</button>
+      </div>
+      <div class="deck-row">
+        <button class="deck-btn alpha-btn" data-val="A">A</button>
+        <button class="deck-btn alpha-btn" data-val="B">B</button>
+        <button class="deck-btn action-btn text-gold" data-val="INTEL ">INTEL</button>
+      </div>
+      <div class="deck-row">
+        <!-- Input buffer preview to show what the user has composed before sending -->
+        <input type="text" id="deck-input" placeholder="Neural Link..." autocomplete="off" spellcheck="false" autocorrect="off">
+        <button class="deck-btn action-btn enter-btn" id="deck-enter">SEND</button>
+      </div>
+    </div>
+
+    <!-- PWA Installation specific logic (optional) -->
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

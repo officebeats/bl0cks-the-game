@@ -1,0 +1,112 @@
+:root {
+  --bg-dark: #09090b;
+  --bg-deck: #18181b;
+  --border-dim: #27272a;
+  --accent-gold: #d4af37;
+  --accent-red: #e11d48;
+  --text-dim: #a1a1aa;
+  --text-bright: #fafafa;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-bright);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* Prevent pull-to-refresh and bounce on mobile */
+}
+
+#terminal-container {
+  flex-grow: 1;
+  width: 100%;
+  padding: 8px;
+  background-color: var(--bg-dark);
+  overflow: hidden;
+  /* xterm.js handles its own scrolling usually */
+}
+
+/* xterm overrides */
+.xterm-viewport {
+  border-radius: 4px;
+}
+
+/* CYBERDECK (Virtual Keyboard) */
+#cyberdeck {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-deck);
+  border-top: 1px solid var(--border-dim);
+  padding: 8px;
+  gap: 8px;
+  flex-shrink: 0;
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.deck-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.deck-btn {
+  flex: 1;
+  background-color: var(--bg-dark);
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  font-family: monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding: 12px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  touch-action: manipulation; /* fast tap no delay */
+  transition: all 0.1s ease;
+}
+
+.deck-btn:active {
+  background-color: var(--border-dim);
+  color: var(--text-bright);
+}
+
+.alpha-btn {
+  font-size: 1.1rem;
+}
+
+.action-btn {
+  background-color: var(--bg-deck);
+  border-color: var(--border-dim);
+}
+
+.text-gold {
+  color: var(--accent-gold);
+}
+
+.enter-btn {
+  flex: 0 0 80px;
+  color: var(--accent-red);
+  font-weight: bold;
+}
+
+#deck-input {
+  flex: 1;
+  background-color: var(--bg-dark);
+  border: 1px solid var(--accent-gold);
+  color: var(--accent-gold);
+  font-family: monospace;
+  font-size: 1rem;
+  padding: 0 12px;
+  border-radius: 6px;
+  outline: none;
+}
+#deck-input::placeholder {
+  color: var(--border-dim);
+}
