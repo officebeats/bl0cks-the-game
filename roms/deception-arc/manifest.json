@@ -1,0 +1,65 @@
+{
+  "$schema": "https://bl0cks.game/schemas/rom-manifest-v1.json",
+  "format_version": 1,
+  "version": "1.0.0",
+
+  "id": "dlc-deception-arc",
+  "name": "The Deception Arc",
+  "description": "Everyone is lying. A 3-level DLC that turns trust into a weapon. Your own People Cards may be working against you.",
+  "author": "Ernesto 'Beats' Rodriguez",
+  "license": "MIT",
+  "homepage": "https://github.com/officebeats/bl0cks-the-game",
+  "tags": ["dlc", "deception", "betrayal", "advanced"],
+
+  "engine": {
+    "min_version": "2.0.0",
+    "max_version": "3.x"
+  },
+
+  "extends": "base-chicago",
+
+  "world": {
+    "factions": "world/factions.md"
+  },
+
+  "levels": [
+    { "id": "D1", "file": "levels/d1_the_mask.md", "type": "standard", "name": "The Mask" },
+    { "id": "D2", "file": "levels/d2_the_double.md", "type": "standard", "name": "The Double" },
+    { "id": "D3", "file": "levels/d3_the_reckoning.md", "type": "boss", "name": "The Reckoning" }
+  ],
+
+  "prompts": {
+    "narrator": "prompts/narrator.md"
+  },
+
+  "cards": {
+    "templates_dir": "cards/templates/",
+    "custom_dir": "cards/custom/"
+  },
+
+  "assets": {
+    "theme": "assets/theme.json"
+  },
+
+  "ai": {
+    "min_tier": "gold",
+    "recommended_tier": "platinum",
+    "required_capabilities": ["chat", "system_instruction"],
+    "context_budget": 48000
+  },
+
+  "difficulty": {
+    "estimated_playtime_minutes": 90,
+    "level_count": 3,
+    "hidden_ratio_range": [0.5, 0.9],
+    "recommended_experience": "intermediate"
+  },
+
+  "branding": {
+    "badge_icon": "🎭",
+    "badge_label": "DECEPTION ARC",
+    "accent_color": "#8E44AD",
+    "credit_line": "DLC by Beats",
+    "splash_tagline": "Everyone is lying."
+  }
+}

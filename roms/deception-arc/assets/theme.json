@@ -1,0 +1,24 @@
+{
+  "name": "Deception Arc",
+  "palette": {
+    "primary": "#8E44AD",
+    "secondary": "#2C3E50",
+    "accent": "#E74C3C",
+    "surface": "#1A1A2E",
+    "text": "#ECF0F1",
+    "muted": "#7F8C8D"
+  },
+  "ui": {
+    "card_border": "#8E44AD",
+    "card_bg": "#16213E",
+    "card_shadow": "#0F0F23",
+    "territory_friendly": "#27AE60",
+    "territory_contested": "#F39C12",
+    "territory_enemy": "#E74C3C",
+    "heat_gradient": ["#27AE60", "#F39C12", "#E74C3C", "#C0392B", "#8E44AD"]
+  },
+  "typography": {
+    "title_font": "monospace",
+    "accent_chars": "▓▒░█▀▄"
+  }
+}

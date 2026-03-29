@@ -604,6 +604,51 @@ export function renderBoard(state) {
   out.push(doubleRow(headerLeft + ' '.repeat(Math.max(1, headerGap)) + headerRight, iW));
   out.push(doubleMid(iW));
 
+  // ── Engine HUD (Influence / Heat / Phase) ──
+  const eng = state._engine || null;
+  if (eng) {
+    // Influence bar
+    const inf = eng.influence ?? 3;
+    const maxInf = eng.maxInfluence ?? 6;
+    const infBarW = compact ? 6 : 8;
+    const infFilled = Math.round((inf / maxInf) * infBarW);
+    const infEmpty = infBarW - infFilled;
+    const infColor = inf >= 4 ? A.green : inf >= 2 ? A.gold : A.red;
+    const infBar = `${infColor}${BOX.full.repeat(infFilled)}${A.smoke}${BOX.light.repeat(infEmpty)}${A.reset}`;
+    const infLabel = `${A.cyan}\u25c8 INF${A.reset} ${infBar} ${infColor}${inf}/${maxInf}${A.reset}`;
+
+    // Heat meter
+    const heat = eng.heat ?? 0;
+    const heatMax = 20;
+    const heatBarW = compact ? 6 : 8;
+    const heatFilled = Math.round((heat / heatMax) * heatBarW);
+    const heatEmpty = heatBarW - heatFilled;
+    let heatColor;
+    if (heat >= 18) heatColor = A.purple;
+    else if (heat >= 14) heatColor = '\x1b[38;2;220;50;47m';
+    else if (heat >= 10) heatColor = A.orange;
+    else if (heat >= 5) heatColor = A.gold;
+    else heatColor = A.green;
+    const heatBar = `${heatColor}${BOX.full.repeat(heatFilled)}${A.smoke}${BOX.light.repeat(heatEmpty)}${A.reset}`;
+    const heatThresholdName = eng.heatThreshold || '';
+    const heatLabel = `${A.ember}\u2668 HEAT${A.reset} ${heatBar} ${heatColor}${heat}/${heatMax}${A.reset}`;
+
+    // Phase/Turn
+    const turn = eng.turn ?? '';
+    const phase = eng.phase ? eng.phase.toUpperCase() : '';
+    const turnLabel = turn ? `${A.smoke}T${turn}${A.reset}` : '';
+    const phaseLabel = phase ? `${A.slate}\u25b8${phase}${A.reset}` : '';
+
+    // Compose HUD line
+    const hudLeft = `  ${infLabel}`;
+    const hudMid = `${heatLabel} ${heatColor}${heatThresholdName}${A.reset}`;
+    const hudRight = `${turnLabel} ${phaseLabel} `;
+    const hudGap1 = Math.max(1, Math.floor((iW - visLen(hudLeft) - visLen(hudMid) - visLen(hudRight)) / 2));
+    const hudGap2 = Math.max(1, iW - visLen(hudLeft) - visLen(hudMid) - visLen(hudRight) - hudGap1);
+    out.push(doubleRow(hudLeft + ' '.repeat(hudGap1) + hudMid + ' '.repeat(hudGap2) + hudRight, iW));
+    out.push(doubleMid(iW));
+  }
+
   // ── Territory Map ──
   const territories = state.territories || [];
 
