@@ -37,6 +37,24 @@ function saveConfig(config) {
   writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
 }
 
+// ── Session persistence ─────────────────────────────────────────
+const SAVE_FILE = join(CONFIG_DIR, 'save_game.json');
+
+function loadSession() {
+  try {
+    if (existsSync(SAVE_FILE)) {
+      return JSON.parse(readFileSync(SAVE_FILE, 'utf-8'));
+    }
+  } catch { /* ignored */ }
+  return null;
+}
+
+function saveSession(adapterName, adapterState, levelPath) {
+  mkdirSync(CONFIG_DIR, { recursive: true });
+  const data = { timestamp: Date.now(), adapterName, levelPath, adapterState };
+  writeFileSync(SAVE_FILE, JSON.stringify(data, null, 2));
+}
+
 // ── Terminal helpers ─────────────────────────────────────────────
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 function ask(question) {
@@ -261,10 +279,14 @@ function showHelp() {
 }
 
 // ── Game loop ────────────────────────────────────────────────────
-async function gameLoop(adapter, levelPath) {
+async function gameLoop(adapter, levelPath, resumeSession = null) {
   const systemPrompt = buildSystemPrompt();
-  const levelContent = loadLevel(levelPath);
-  if (!levelContent) process.exit(1);
+
+  let levelContent;
+  if (!resumeSession) {
+    levelContent = loadLevel(levelPath);
+    if (!levelContent) process.exit(1);
+  }
 
   clear();
   console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
@@ -276,8 +298,14 @@ async function gameLoop(adapter, levelPath) {
   console.log(`  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}\n`);
 
   try {
-    const initialResponse = await adapter.start(systemPrompt, levelContent);
+    let initialResponse;
+    if (resumeSession) {
+      initialResponse = adapter.resume(resumeSession.adapterState);
+    } else {
+      initialResponse = await adapter.start(systemPrompt, levelContent);
+    }
     displayResponse(initialResponse);
+    saveSession(adapter.name, adapter.exportState(), levelPath);
   } catch (err) {
     console.error(`\n  ${A.red}${A.bold}Connection failed:${A.reset} ${A.red}${err.message}${A.reset}`);
     if (err.message.includes('401') || err.message.includes('403') || err.message.includes('invalid')) {
@@ -306,6 +334,7 @@ async function gameLoop(adapter, levelPath) {
       const response = await adapter.send(input);
       process.stdout.write('\r\x1b[K');
       const state = displayResponse(response);
+      saveSession(adapter.name, adapter.exportState(), levelPath);
 
       // Check for game end
       if (state.outcome === 'win' || state.outcome === 'loss') {
@@ -429,6 +458,7 @@ async function main() {
 
   // ── Main Menu Loop ──
   let provider;
+  let resumeSessionPayload = null;
   while (true) {
     config = loadConfig();
     const currentProv = config.provider ? PROVIDERS.find(p => p.id === config.provider)?.name || 'None' : 'None';
@@ -446,9 +476,20 @@ async function main() {
     } 
     
     if (menuSelection === "resume") {
-       console.log(`\n  ${A.red}Resuming sessions is not yet implemented in Season 1.${A.reset}`);
-       await ask(`  ${A.dim}Press Enter to return.${A.reset}`);
-       continue;
+       const session = loadSession();
+       if (!session || !session.adapterState) {
+          console.log(`\n  ${A.red}No saved session found in your stash.${A.reset}`);
+          await ask(`  ${A.dim}Press Enter to return.${A.reset}`);
+          continue;
+       }
+       if (session.adapterName !== currentProv) {
+          console.log(`\n  ${A.gold}Warning:${A.reset} This run was saved using ${session.adapterName}. Proceeding with ${currentProv} may crash the neural link.`);
+          const force = await ask(`  ${A.dim}Force load anyway? (y/N) ${A.reset}`);
+          if (force.trim().toLowerCase() !== 'y') continue;
+       }
+       resumeSessionPayload = session;
+       levelPath = session.levelPath;
+       break;
     }
 
     if (menuSelection === "settings") {
@@ -475,7 +516,7 @@ async function main() {
 
   console.log(`\n  ${A.green}✓${A.reset} ${A.bold}${provider.name}${A.reset} connected · ${A.dim}${provider.tier} tier${A.reset}`);
 
-  await gameLoop(adapter, levelPath);
+  await gameLoop(adapter, levelPath, resumeSessionPayload);
 }
 
 main().catch(err => {

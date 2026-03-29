@@ -43,5 +43,14 @@ export function createOpenAIAdapter(apiKey) {
       history.push({ role: 'assistant', content: assistantText });
       return assistantText;
     },
+
+    exportState() {
+      return { history };
+    },
+
+    resume(state) {
+      history = state.history;
+      return history[history.length - 1].content;
+    }
   };
 }

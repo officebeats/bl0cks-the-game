@@ -54,5 +54,15 @@ export function createClaudeAdapter(apiKey) {
       history.push({ role: 'assistant', content: assistantText });
       return assistantText;
     },
+
+    exportState() {
+      return { systemPrompt, history };
+    },
+
+    resume(state) {
+      systemPrompt = state.systemPrompt;
+      history = state.history;
+      return history[history.length - 1].content;
+    }
   };
 }
