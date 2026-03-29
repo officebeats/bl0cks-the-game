@@ -1,6 +1,6 @@
 {
   "name": "bl0cks",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "BL0CKS — The first AI-powered strategy card game. Territory. Trust. Time. Bring your own LLM.",
   "type": "module",
   "bin": {
