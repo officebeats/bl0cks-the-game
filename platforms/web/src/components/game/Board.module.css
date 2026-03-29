@@ -1,0 +1,28 @@
+.cardYou {
+  --status-color: #10b981;
+}
+.cardRival {
+  --status-color: #f43f5e;
+}
+.cardContested {
+  --status-color: #f59e0b;
+}
+.cardNeutral {
+  --status-color: #94a3b8;
+}
+
+.highlight {
+  background-color: var(--status-color);
+}
+
+.dot {
+  background-color: var(--status-color);
+}
+
+.label {
+  color: var(--status-color);
+}
+
+.bottomBar {
+  background-color: var(--status-color);
+}

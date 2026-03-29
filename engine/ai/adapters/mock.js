@@ -46,7 +46,13 @@ export function createMockAdapter() {
 
     async send(userMessage) {
       history.push({ role: 'user', content: userMessage });
-      const response = `Turn processed: ${userMessage}\n\n\`\`\`json\n${MOCK_BOARD}\n\`\`\``;
+      
+      let outJson = JSON.parse(MOCK_BOARD);
+      if (userMessage.includes('WIN')) {
+        outJson.outcome = 'win';
+      }
+      
+      const response = `Turn processed: ${userMessage}\n\n\`\`\`json\n${JSON.stringify(outJson, null, 2)}\n\`\`\``;
       history.push({ role: 'assistant', content: response });
       return response;
     },

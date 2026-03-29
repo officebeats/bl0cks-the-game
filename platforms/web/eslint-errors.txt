@@ -1,0 +1,14 @@
+
+O:\bl0cks-the-game\platforms\web\src\app\page.tsx
+  132:32  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  132:38  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+O:\bl0cks-the-game\platforms\web\src\app\play\page.tsx
+  25:6  warning  React Hook useEffect has a missing dependency: 'startLevel'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+O:\bl0cks-the-game\platforms\web\src\components\game\Narrator.tsx
+  68:16  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  68:36  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+Γ£û 5 problems (4 errors, 1 warning)
+

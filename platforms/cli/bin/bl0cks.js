@@ -139,6 +139,9 @@ async function main() {
     provider = await selectProvider(config);
   }
 
+
+
+
   const apiKey = await getApiKey(provider, config);
 
   // ── Set adapter on the engine ──
@@ -152,11 +155,13 @@ async function main() {
   }
 
   // ── Handle resume ──
+  let nextAction = null;
   if (resumeSessionPayload) {
     try {
       const state = engine.resumeSession(resumeSessionPayload);
       clear();
       displayResponse(state, engine.getROMInfo());
+      nextAction = await inputLoop(engine, levelId);
     } catch (err) {
       console.error(`\n  ${A.red}Failed to resume: ${err.message}${A.reset}`);
       console.log(`  ${A.dim}Starting fresh instead...${A.reset}`);
@@ -165,9 +170,35 @@ async function main() {
   }
 
   if (!resumeSessionPayload) {
-    await gameLoop(engine, levelId);
-  } else {
-    await inputLoop(engine);
+    nextAction = await gameLoop(engine, levelId);
+  }
+
+  // ── Campaign Loop ──
+  while (nextAction && nextAction.action === 'next') {
+    const levels = engine.listLevels();
+    const idx = levels.findIndex(l => l.id === nextAction.currentLevel);
+    
+    if (idx !== -1 && idx < levels.length - 1) {
+      levelId = levels[idx + 1].id;
+      
+      const ledger = engine.getLedger();
+      // Inform the player
+      clear();
+      console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
+      console.log(`  ${A.gold}${A.bold}Accessing Next Sequence: ${levels[idx+1].name}${A.reset}`);
+      console.log(`  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}\n`);
+      
+      await new Promise(r => setTimeout(r, 1500));
+      
+      // Start the new level (the engine retains the ledger internally if passed, or we set it)
+      engine.setLedger(ledger);
+      nextAction = await gameLoop(engine, levelId);
+    } else {
+      clear();
+      console.log(`\n  ${A.gold}☆ CAMPAIGN COMPLETE ☆${A.reset}`);
+      console.log(`  ${A.dim}You survived. The block remembers.${A.reset}\n`);
+      break;
+    }
   }
 
   closeRL();

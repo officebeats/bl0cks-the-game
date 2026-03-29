@@ -87,21 +87,22 @@ export async function gameLoop(engine, levelId) {
   }
 
   // Main input loop
-  await inputLoop(engine);
+  return await inputLoop(engine, levelId);
 }
 
 /**
  * Main player input loop — shared by fresh start and resume.
  * @param {object} engine
+ * @param {string} levelId
  */
-export async function inputLoop(engine) {
+export async function inputLoop(engine, levelId) {
   while (true) {
     const input = await ask(`\n  ${A.gold}▸${A.reset} `);
     const trimmed = input.trim().toLowerCase();
 
     if (trimmed === 'quit' || trimmed === 'exit' || trimmed === 'q') {
       console.log(`\n  ${A.gray}${A.italic}The block remembers.${A.reset}\n`);
-      break;
+      return { action: 'quit' };
     }
     if (trimmed === 'help' || trimmed === '?') {
       console.log(renderHelp());
@@ -114,7 +115,14 @@ export async function inputLoop(engine) {
       const state = await engine.sendAction(input);
       process.stdout.write('\r\x1b[K');
       displayResponse(state, engine.getROMInfo());
-      saveSession(engine.exportSession());
+      
+      // Don't save session if the level is over
+      if (state.outcome !== 'win' && state.outcome !== 'loss') {
+        saveSession(engine.exportSession());
+      } else {
+        // Clear session so resume isn't stuck on final screen
+        saveSession(null);
+      }
 
       if (state.outcome === 'win' || state.outcome === 'loss') {
         if (state.outcome === 'win') {
@@ -126,10 +134,14 @@ export async function inputLoop(engine) {
           const loyAvg = peopleCards.reduce((acc, c) => acc + (c.loyalty && c.loyalty !== '?' ? c.loyalty : 0), 0) / Math.max(1, peopleCards.length);
           const totalScore = (ticks * 1000) + (territories * 2000) + (loyAvg * 500);
           console.log(`\n  ${A.gold}★ FINAL SCORE: ${Math.round(totalScore)} ★${A.reset}`);
+          console.log(`\n  ${A.dim}Press Enter to continue.${A.reset}`);
+          await ask('');
+          return { action: 'next', currentLevel: levelId };
+        } else {
+          console.log(`\n  ${A.dim}Press Enter to exit.${A.reset}`);
+          await ask('');
+          return { action: 'quit' };
         }
-        console.log(`\n  ${A.dim}Press Enter to exit.${A.reset}`);
-        await ask('');
-        break;
       }
     } catch (err) {
       process.stdout.write('\r\x1b[K');
@@ -138,4 +150,5 @@ export async function inputLoop(engine) {
   }
 
   engine.destroy();
+  return { action: 'quit' };
 }
