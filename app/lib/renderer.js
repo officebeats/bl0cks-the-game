@@ -12,7 +12,14 @@
  * - Rounded card corners (╭╮╰╯)
  */
 
-const W = 80; // Terminal width
+// ── Dynamic Terminal Width ───────────────────────────────────────
+function getW() {
+  const cols = process.stdout.columns || 80;
+  return Math.max(50, Math.min(cols, 120));
+}
+
+// Legacy compat — some functions receive W as parameter
+const W = 80; // fallback only, prefer getW()
 
 // ── ANSI True-Color Palette ──────────────────────────────────────
 const A = {
@@ -227,7 +234,12 @@ function bufToLines(buf, defaultBg) {
 //  CARD PAINTING — paint individual cards into the cell buffer
 // ══════════════════════════════════════════════════════════════════
 
-const CARD_W = 16;
+function getCardW() {
+  const w = getW();
+  if (w < 60) return 13;
+  if (w < 75) return 14;
+  return 16;
+}
 const CARD_H = 8;
 
 // ── Loyalty Bar (gradient) ───────────────────────────────────────
@@ -437,44 +449,44 @@ function renderFannedHand(cards, innerWidth) {
   const n = cards.length;
   if (n === 0) return [];
 
-  const cW = CARD_W;
+  const cW = getCardW();
   const cH = CARD_H;
 
+  // For very narrow terminals, use compact list instead of fan
+  if (innerWidth < 45 || n > 6) {
+    return renderCompactHand(cards, innerWidth);
+  }
+
   // Determine minimal overlap to ensure text remains fully visible
-  // We want the maximum possible step between cards, constrained by innerWidth.
   let overlap;
   if (n <= 1) {
     overlap = 0;
   } else {
-    const maxFanW = innerWidth - 2; // use most of available width
+    const maxFanW = innerWidth - 2;
     const maxStep = Math.floor((maxFanW - cW - 1) / (n - 1));
     const requiredOverlap = cW - maxStep;
-    
-    // We want at least 1 column of overlap so they visually connect (hide right border)
     overlap = Math.max(1, requiredOverlap);
-    // Don't overlap so much that the card becomes unreadable
-    overlap = Math.min(overlap, cW - 6); 
+    overlap = Math.min(overlap, cW - 6);
   }
 
   const step = cW - overlap;
-  const fanWidth = (n - 1) * step + cW + 1; // +1 for shadow
-  const startX = Math.floor((innerWidth - fanWidth) / 2);
+  const fanWidth = (n - 1) * step + cW + 1;
+  const startX = Math.max(0, Math.floor((innerWidth - fanWidth) / 2));
 
-  // Arc offsets — parabolic: center cards at y=0, edge cards pushed down
+  // Arc offsets — parabolic: center cards raised, edges lowered
   const center = (n - 1) / 2;
   const arcOffsets = [];
   let maxArc = 0;
   for (let i = 0; i < n; i++) {
     const dist = center > 0 ? Math.abs(i - center) / center : 0;
-    const arc = Math.round(dist * dist * 2); // 0, 1, or 2
+    const arc = Math.round(dist * dist * 2);
     arcOffsets.push(arc);
     if (arc > maxArc) maxArc = arc;
   }
 
-  const bufH = cH + maxArc + 1; // +1 for shadow row
+  const bufH = cH + maxArc + 1;
   const buf = createBuf(innerWidth, bufH);
 
-  // Paint cards left-to-right (later cards paint over earlier = on top)
   for (let i = 0; i < n; i++) {
     const cx = startX + i * step;
     const cy = arcOffsets[i];
@@ -490,6 +502,30 @@ function renderFannedHand(cards, innerWidth) {
   }
 
   return bufToLines(buf, A.bgDark);
+}
+
+// ── Compact hand for narrow terminals ────────────────────────────
+function renderCompactHand(cards, innerWidth) {
+  const lines = [];
+  for (let i = 0; i < cards.length; i++) {
+    const c = cards[i];
+    const idx = `${A.gold}${i + 1}${A.reset}`;
+    if (c.type === 'people') {
+      const style = factionStyle(c.faction);
+      const loyStr = c.loyalty != null ? ` Loy:${c.loyalty}` : '';
+      const name = truncate(c.name || '???', 14);
+      const role = truncate(c.role || '???', 10);
+      lines.push(`  ${idx} ${A.bold}${style.fg}${name}${A.reset} ${A.chalk}${role}${A.reset}${A.smoke}${loyStr}${A.reset}`);
+    } else if (c.type === 'move') {
+      const name = (c.name || '???').toUpperCase();
+      const desc = truncate(c.description || '', innerWidth - 16);
+      lines.push(`  ${idx} ${A.red}${A.bold}\u2694 ${name}${A.reset} ${A.smoke}${desc}${A.reset}`);
+    } else {
+      const name = (c.name || '???').toUpperCase();
+      lines.push(`  ${idx} ${A.orange}\u26a0 ${name}${A.reset} ${A.smoke}${truncate(c.description || '', innerWidth - 14)}${A.reset}`);
+    }
+  }
+  return lines;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -531,7 +567,9 @@ function renderTerritoryTile(territory, tileW = 24) {
 // ══════════════════════════════════════════════════════════════════
 
 export function renderBoard(state) {
-  const iW = W - 2;
+  const termW = getW();
+  const iW = termW - 2;
+  const compact = termW < 70;
   const out = [];
 
   // ── Header ──
@@ -552,16 +590,22 @@ export function renderBoard(state) {
   else if (clockRatio > 0.25) clockColor = '\x1b[38;2;255;200;40m';
   else clockColor = '\x1b[38;2;46;204;113m';
 
-  const clockBarW = 12;
+  const clockBarW = compact ? 8 : 12;
   const clockFilled = Math.round(clockRatio * clockBarW);
   const clockEmpty = clockBarW - clockFilled;
   const clockBar = `${clockColor}${BOX.full.repeat(clockFilled)}${A.smoke}${BOX.light.repeat(clockEmpty)}${A.reset}`;
 
-  const headerLeft = `  ${A.red}${A.bold}BL0CKS${A.reset} ${A.smoke}\u2502${A.reset} ${A.white}Lv.${levelNum} ${A.chalk}${levelName}${A.reset}`;
-  const headerRight = `${clockColor}\u23f1 ${clockCurrent}/${clockTotal}${A.reset} ${A.smoke}${clockStatus}${A.reset}  `;
-  const headerGap = iW - visLen(headerLeft) - visLen(headerRight);
-  out.push(doubleRow(headerLeft + ' '.repeat(Math.max(1, headerGap)) + headerRight, iW));
-  out.push(doubleRow(`  ${A.smoke}TIME${A.reset} ${clockBar}`, iW));
+  if (compact) {
+    // Two-line header for narrow terminals
+    out.push(doubleRow(`  ${A.red}${A.bold}BL0CKS${A.reset} ${A.smoke}\u2502${A.reset} ${A.white}Lv.${levelNum} ${A.chalk}${truncate(levelName, iW - 16)}${A.reset}`, iW));
+    out.push(doubleRow(`  ${A.smoke}TIME${A.reset} ${clockBar} ${clockColor}${clockCurrent}/${clockTotal}${A.reset} ${A.smoke}${truncate(clockStatus, 12)}${A.reset}`, iW));
+  } else {
+    const headerLeft = `  ${A.red}${A.bold}BL0CKS${A.reset} ${A.smoke}\u2502${A.reset} ${A.white}Lv.${levelNum} ${A.chalk}${levelName}${A.reset}`;
+    const headerRight = `${clockColor}\u23f1 ${clockCurrent}/${clockTotal}${A.reset} ${A.smoke}${clockStatus}${A.reset}  `;
+    const headerGap = iW - visLen(headerLeft) - visLen(headerRight);
+    out.push(doubleRow(headerLeft + ' '.repeat(Math.max(1, headerGap)) + headerRight, iW));
+    out.push(doubleRow(`  ${A.smoke}TIME${A.reset} ${clockBar}`, iW));
+  }
   out.push(doubleMid(iW));
 
   // ── Territory Map ──
@@ -569,8 +613,15 @@ export function renderBoard(state) {
   out.push(doubleRow('', iW));
 
   const territories = state.territories || [];
-  const tileW = 24;
-  const tilesPerRow = 3;
+  // Responsive: pick columns + tile width based on terminal width
+  let tilesPerRow, tileW;
+  if (iW >= 76) {
+    tilesPerRow = 3; tileW = 24;
+  } else if (iW >= 52) {
+    tilesPerRow = 2; tileW = Math.min(24, Math.floor((iW - 6) / 2));
+  } else {
+    tilesPerRow = 1; tileW = Math.min(24, iW - 4);
+  }
   for (let rowStart = 0; rowStart < territories.length; rowStart += tilesPerRow) {
     const rowTs = territories.slice(rowStart, rowStart + tilesPerRow);
     const boxes = rowTs.map(t => renderTerritoryTile(t, tileW));
@@ -666,7 +717,7 @@ export function renderBoard(state) {
 // ══════════════════════════════════════════════════════════════════
 
 export function renderNarrative(text) {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
   out.push(innerDivider(iW));
   const lines = wordWrap(text, iW - 6);
@@ -678,7 +729,7 @@ export function renderNarrative(text) {
 }
 
 export function renderWin(message) {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
   out.push('');
   out.push(doubleTop(iW));
@@ -702,7 +753,7 @@ export function renderWin(message) {
 }
 
 export function renderLoss(message) {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
   out.push('');
   out.push(doubleTop(iW));
@@ -729,7 +780,7 @@ export function renderLoading() {
 }
 
 export function renderSplash(frame = 0) {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
 
   out.push('');
@@ -801,7 +852,7 @@ export function renderSplash(frame = 0) {
 
 // ── Provider Selection Screen ────────────────────────────────────
 export function renderProviderSelect(providers, savedProvider) {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
   out.push(doubleTop(iW));
   out.push(doubleRow(`  ${A.bold}${A.white}Choose Your Engine${A.reset}`, iW));
@@ -826,7 +877,7 @@ export function renderProviderSelect(providers, savedProvider) {
 
 // ── Animated Menu Screen ─────────────────────────────────────────
 export function renderMenu(title, options, focusIdx, frame = 0) {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
 
   out.push(doubleTop(iW));
@@ -898,7 +949,7 @@ export function renderMenu(title, options, focusIdx, frame = 0) {
 
 // ── Help Screen ──────────────────────────────────────────────────
 export function renderHelp() {
-  const iW = W - 2;
+  const iW = getW() - 2;
   const out = [];
   out.push('');
   out.push(doubleTop(iW));
