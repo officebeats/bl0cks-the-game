@@ -838,7 +838,7 @@ export function renderMenu(title, options, focusIdx, frame = 0) {
 
   // Prepare the block of lines we want to show
   const contentLines = [];
-  contentLines.push(padCenter(`${A.gold}${A.bold}${title}${A.reset}`, innerContentW + 8)); // rough padding to offset ansi
+  contentLines.push(`${A.gold}${A.bold}${title}${A.reset}`);
   contentLines.push('');
   contentLines.push('');
 
@@ -847,10 +847,7 @@ export function renderMenu(title, options, focusIdx, frame = 0) {
     const prefix = isFocused ? `${A.green}${A.bold}▸${A.reset} ` : '  ';
     const textColor = isFocused ? A.white : A.gray;
     const label = `${prefix}${textColor}${options[i].label}${A.reset}`;
-    // Indent slightly from center
-    const visLenLabel = visLen(options[i].label) + 2;
-    const padding = ' '.repeat(Math.max(0, Math.floor((innerContentW - visLenLabel) / 2)));
-    contentLines.push(padding + label);
+    contentLines.push(label);
     contentLines.push('');
   }
 
@@ -884,8 +881,8 @@ export function renderMenu(title, options, focusIdx, frame = 0) {
 
     const cLineRaw = contentLines[y] || '';
     const visCLine = visLen(cLineRaw);
-    const contentPadLeft = ' '.repeat(Math.floor((innerContentW - visCLine) / 2));
-    const contentPadRight = ' '.repeat(Math.ceil((innerContentW - visCLine) / 2));
+    const contentPadLeft = ' '.repeat(Math.max(0, Math.floor((innerContentW - visCLine) / 2)));
+    const contentPadRight = ' '.repeat(Math.max(0, Math.ceil((innerContentW - visCLine) / 2)));
 
     const styledLeft = `${A.rust}${A.bold}${leftEdge}${A.reset}`;
     const styledRight = `${A.rust}${A.bold}${rightEdge}${A.reset}`;
