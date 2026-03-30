@@ -1,7 +1,7 @@
 {
   "name": "bl0cks-the-game",
   "private": true,
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-beta.1",
   "description": "BL0CKS — The first AI-powered strategy card game. Engine + ROM architecture.",
   "type": "module",
   "workspaces": [

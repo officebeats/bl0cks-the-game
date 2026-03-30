@@ -18,6 +18,8 @@ const spaceMono = Space_Mono({
   subsets: ["latin"],
 });
 
+import GlobalAudio from "@/components/GlobalAudio";
+
 export const metadata: Metadata = {
   title: "BL0CKS — The AI Strategy Card Game",
   description: "Experience the first strategy card game with a persistent AI-driven narrative world.",
@@ -31,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable} ${spaceMono.variable}`}>
       <body className="bg-pattern antialiased text-foreground">
+        <GlobalAudio />
         {children}
       </body>
     </html>

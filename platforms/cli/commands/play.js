@@ -46,16 +46,26 @@ export function displayResponse(state, romInfo) {
   return state;
 }
 
+import { playAudio } from '../lib/audio.js';
+import { join } from 'path';
+
 /**
  * Run the main game loop for a level.
  * @param {object} engine - Booted BL0CKS engine instance
  * @param {string} levelId - Level to play
+ * @param {string} romPath - Absolute path to the ROM directory
  */
-export async function gameLoop(engine, levelId) {
+export async function gameLoop(engine, levelId, romPath) {
   const romInfo = engine.getROMInfo();
   const levelList = engine.listLevels();
   const level = levelList.find(l => l.id === levelId);
   const levelName = level ? level.name : `Level ${levelId}`;
+
+  try {
+    if (romPath) {
+      playAudio(join(romPath, 'assets', 'audio', `level-${levelId}.mp3`));
+    }
+  } catch (err) {}
 
   clear();
   console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
@@ -89,6 +99,7 @@ export async function gameLoop(engine, levelId) {
   // Main input loop
   return await inputLoop(engine, levelId);
 }
+
 
 /**
  * Main player input loop — shared by fresh start and resume.

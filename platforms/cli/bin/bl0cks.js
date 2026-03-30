@@ -170,7 +170,7 @@ async function main() {
   }
 
   if (!resumeSessionPayload) {
-    nextAction = await gameLoop(engine, levelId);
+    nextAction = await gameLoop(engine, levelId, romPath);
   }
 
   // ── Campaign Loop ──
@@ -192,7 +192,7 @@ async function main() {
       
       // Start the new level (the engine retains the ledger internally if passed, or we set it)
       engine.setLedger(ledger);
-      nextAction = await gameLoop(engine, levelId);
+      nextAction = await gameLoop(engine, levelId, romPath);
     } else {
       clear();
       console.log(`\n  ${A.gold}☆ CAMPAIGN COMPLETE ☆${A.reset}`);
@@ -202,10 +202,21 @@ async function main() {
   }
 
   closeRL();
+  import('../lib/audio.js').then(m => m.stopAudio());
   process.exit(0);
 }
 
+// Ensure audio is killed even if the player presses Ctrl+C
+process.on('SIGINT', () => {
+  import('../lib/audio.js').then(m => m.stopAudio());
+  process.exit();
+});
+process.on('exit', () => {
+  import('../lib/audio.js').then(m => m.stopAudio());
+});
+
 main().catch(err => {
   console.error(`\n${A.red}Fatal: ${err.message}${A.reset}`);
+  import('../lib/audio.js').then(m => m.stopAudio());
   process.exit(1);
 });

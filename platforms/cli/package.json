@@ -1,6 +1,6 @@
 {
   "name": "@bl0cks/cli",
-  "version": "2.0.0-alpha.1",
+  "version": "2.0.0-beta.1",
   "description": "BL0CKS CLI — Terminal client for the BL0CKS game engine.",
   "type": "module",
   "bin": {
@@ -11,6 +11,8 @@
     "lib/",
     "commands/"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "sound-play": "^1.1.0"
+  },
   "license": "MIT"
 }

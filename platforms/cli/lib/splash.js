@@ -6,12 +6,25 @@
 
 import { renderSplash, renderMenu, A } from './renderer.js';
 import { clear, showAnimatedPrompt } from './input.js';
+import { playAudio, stopAudio } from './audio.js';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const REPO_ROOT = join(__dirname, '..', '..', '..');
 
 /**
  * Play the boot splash animation.
  * @param {number} [frames=70] - Number of animation frames
  */
 export async function playSplash(frames = 70) {
+  try {
+    const audioPath = join(REPO_ROOT, 'roms', 'chicago', 'assets', 'audio', 'title-screen.mp3');
+    // Plays natively in our own custom wrapper (guarantees stopping)
+    playAudio(audioPath);
+  } catch (err) {}
+
   clear();
   for (let f = 0; f < frames; f++) {
     process.stdout.write('\x1b[H');

@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Shield, Zap, Brain, Hexagon, ChevronRight, Terminal } from "lucide-react";
+import { Shield, Zap, Brain, Hexagon, ChevronRight, Terminal, Volume2, VolumeX } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const containerVariants: any = {
@@ -20,6 +21,35 @@ export default function Home() {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: "easeOut" } }
   };
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  
+  useEffect(() => {
+    // Browsers often block autoplay without user interaction,
+    // so we handle it gracefully.
+    const audio = new Audio('/audio/title-screen.mp3');
+    audio.loop = true;
+    audio.volume = 0.5;
+    
+    // Auto-play attempt
+    audio.play().then(() => setIsPlaying(true)).catch(() => {
+      // Autoplay blocked - wait for user interaction down below
+      console.log('Autoplay blocked. User must interact first.');
+    });
+
+    const handleFocusPlay = () => audio.play().then(() => setIsPlaying(true)).catch(() => {});
+    document.addEventListener('click', handleFocusPlay, { once: true });
+
+    // Inform GlobalAudio.tsx to swap tracks if we came from gameplay
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('bl0cks-audio-change', { detail: { src: '/audio/title-screen.mp3' } }));
+    }
+
+    return () => {
+      audio.pause();
+      document.removeEventListener('click', handleFocusPlay);
+    };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-pattern relative selection:bg-primary selection:text-black">

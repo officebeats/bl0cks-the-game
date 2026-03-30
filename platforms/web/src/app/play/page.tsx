@@ -24,6 +24,16 @@ export default function PlayPage() {
     init();
   }, [startLevel]);
 
+  // Handle Gameplay Audio changes based on Level
+  useEffect(() => {
+    if (state?.levelNumber) {
+      const padded = String(state.levelNumber).padStart(2, '0');
+      window.dispatchEvent(new CustomEvent('bl0cks-audio-change', { 
+        detail: { src: `/audio/level-${padded}.mp3` } 
+      }));
+    }
+  }, [state?.levelNumber]);
+
   const handleSelect = (option: string) => {
     sendAction(option);
   };
