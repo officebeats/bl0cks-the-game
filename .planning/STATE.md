@@ -1,6 +1,6 @@
 ## Current Position
 
-Phase: Phase 3 (Geographic Layout)
+Phase: Phase 4 (E2E Regression Testing)
 Plan: —
 Status: Ready for discussion/planning
-Last activity: Today — Phase 2 completed, LLM JSON schema forces deterministic enemy intent, UI draws intent visibly above cards.
+Last activity: Today — Phase 3 completed, Slay the Spire Act map and streamlined CLI board rendering added.
