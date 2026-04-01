@@ -1,6 +1,6 @@
 ## Current Position
 
-Phase: Phase 4 (E2E Regression Testing)
+Phase: Done
 Plan: —
-Status: Ready for discussion/planning
-Last activity: Today — Phase 3 completed, Slay the Spire Act map and streamlined CLI board rendering added.
+Status: Milestone v1.1 Finished
+Last activity: Today — Phase 4 E2E testing completed, CLI rendering snapshots are clean and parsing is stable.
