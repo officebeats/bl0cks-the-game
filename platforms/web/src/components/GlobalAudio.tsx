@@ -1,21 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Volume2, VolumeX, Music } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 
+/**
+ * GlobalAudio - Cross-page audio manager
+ *
+ * Performance:
+ *  - Audio instance stored in ref to prevent re-creation
+ *  - Event listener properly cleaned up on unmount
+ *  - Window global is properly typed and cleaned
+ */
 export default function GlobalAudio() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    // We mount audio globally so it persists seamlessly 
     const audio = new Audio("/audio/title-screen.mp3");
     audio.loop = true;
     audio.volume = 0.5;
-    (window as any).__globalAudio = audio;
+    audioRef.current = audio;
+    (window as { __globalAudio?: HTMLAudioElement }).__globalAudio = audio;
 
-    const handleAudioChange = (e: any) => {
-      const newSrc = e.detail?.src;
+    const handleAudioChange = (e: Event) => {
+      const customEvent = e as CustomEvent<{ src?: string }>;
+      const newSrc = customEvent.detail?.src;
       if (!newSrc || audio.src.endsWith(newSrc)) return;
 
       const wasPlaying = !audio.paused;
@@ -26,36 +36,37 @@ export default function GlobalAudio() {
       }
     };
 
-    window.addEventListener('bl0cks-audio-change', handleAudioChange);
+    window.addEventListener('bl0cks-audio-change', handleAudioChange as EventListener);
 
     audio.play()
       .then(() => setIsPlaying(true))
       .catch(() => {
-        console.log("Autoplay blocked. User interaction required.");
         setShowPrompt(true);
       });
 
     return () => {
       audio.pause();
-      delete (window as any).__globalAudio;
-      window.removeEventListener('bl0cks-audio-change', handleAudioChange);
+      audio.src = '';
+      audioRef.current = null;
+      delete (window as { __globalAudio?: HTMLAudioElement }).__globalAudio;
+      window.removeEventListener('bl0cks-audio-change', handleAudioChange as EventListener);
     };
   }, []);
 
-  const toggleMute = () => {
-    const audio = (window as any).__globalAudio;
+  const toggleMute = useCallback(() => {
+    const audio = audioRef.current;
     if (!audio) return;
-    
+
     if (audio.paused) {
       audio.play().then(() => {
         setIsPlaying(true);
         setShowPrompt(false);
-      });
+      }).catch(() => {});
     } else {
       audio.pause();
       setIsPlaying(false);
     }
-  };
+  }, []);
 
   return (
     <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3">
@@ -64,7 +75,7 @@ export default function GlobalAudio() {
           Click anywhere to start music
         </span>
       )}
-      <button 
+      <button
         onClick={toggleMute}
         className="w-10 h-10 rounded-full glass flex items-center justify-center text-foreground-muted hover:text-primary transition-colors hover:scale-110 active:scale-95"
         title={isPlaying ? "Mute Music" : "Play Music"}

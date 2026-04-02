@@ -1,7 +1,8 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, Radio, MessageSquare, AlertTriangle, Info, ChevronDown } from "lucide-react";
+import { Terminal, Radio, AlertTriangle } from "lucide-react";
 import ChoiceBox from "./ChoiceBox";
 
 interface Event {
@@ -26,7 +27,10 @@ interface NarratorProps {
   onSelect?: (option: string) => void;
 }
 
-export default function Narrator({ event, choice, scanner, history = [], loading, onSelect }: NarratorProps) {
+const Narrator = memo(function Narrator({ event, choice, scanner, history = [], loading, onSelect }: NarratorProps) {
+  // Pre-compute history items to avoid re-rendering unchanged entries
+  const recentHistory = useMemo(() => history.slice(-3), [history]);
+
   return (
     <div className="flex flex-col gap-4 h-full p-4 border-l border-border bg-black/40 backdrop-blur-xl">
       {/* Scanner Section */}
@@ -46,36 +50,36 @@ export default function Narrator({ event, choice, scanner, history = [], loading
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-6 py-4">
         {/* Choice Box (Priority) */}
         {choice && (
-          <ChoiceBox 
-            choice={choice} 
-            onSelect={onSelect || (() => {})} 
-            loading={loading} 
+          <ChoiceBox
+            choice={choice}
+            onSelect={onSelect || (() => {})}
+            loading={loading}
           />
         )}
 
         {/* Active Event */}
         {event && !choice && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 10 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col gap-3"
           >
-             <div className="flex items-center gap-2 px-2 py-1 bg-error/10 border border-error/30 rounded text-error w-fit">
-                <AlertTriangle size={14} />
-                <span className="text-[10px] font-bold uppercase tracking-wider">{event.name}</span>
-             </div>
-             <p className="text-xl font-outfit leading-snug">
-               &quot;{event.description}&quot;
-             </p>
+            <div className="flex items-center gap-2 px-2 py-1 bg-error/10 border border-error/30 rounded text-error w-fit">
+              <AlertTriangle size={14} />
+              <span className="text-[10px] font-bold uppercase tracking-wider">{event.name}</span>
+            </div>
+            <p className="text-xl font-outfit leading-snug">
+              &quot;{event.description}&quot;
+            </p>
           </motion.div>
         )}
 
         {/* Narrative Flow */}
         <div className="flex flex-col gap-4 mt-4">
           <AnimatePresence>
-            {history.slice(-3).map((text, idx) => (
-              <motion.div 
-                key={idx}
+            {recentHistory.map((text, idx) => (
+              <motion.div
+                key={`${text.slice(0, 32)}-${idx}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 0.6 }}
                 className="text-sm text-foreground-muted leading-relaxed"
@@ -94,16 +98,18 @@ export default function Narrator({ event, choice, scanner, history = [], loading
           <span className="text-xs font-mono uppercase tracking-wider">Awaiting Input...</span>
           <div className="w-1.5 h-3 bg-primary animate-pulse ml-1" />
         </div>
-        
+
         <div className="flex items-center gap-2">
-           <button className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 rounded hover:bg-white/10 transition-colors">
-             History
-           </button>
-           <button className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 rounded hover:bg-white/10 transition-colors">
-             Assets
-           </button>
+          <button className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 rounded hover:bg-white/10 transition-colors">
+            History
+          </button>
+          <button className="flex-1 py-1.5 text-[10px] font-bold uppercase tracking-widest bg-white/5 border border-white/10 rounded hover:bg-white/10 transition-colors">
+            Assets
+          </button>
         </div>
       </div>
     </div>
   );
-}
+});
+
+export default Narrator;

@@ -1,8 +1,11 @@
 /**
  * BL0CKS Engine Event Emitter
- * 
+ *
  * Lightweight pub/sub for engine → platform communication.
  * No external dependencies. Supports wildcard subscriptions.
+ *
+ * Performance: Unsubscribe uses in-place splice (O(n)) instead of
+ * filter (O(n) allocation) to avoid GC pressure on hot paths.
  */
 export class EventBus {
   #listeners = new Map();
@@ -18,19 +21,22 @@ export class EventBus {
     if (event === '*') {
       this.#wildcardListeners.push(callback);
       return () => {
-        this.#wildcardListeners = this.#wildcardListeners.filter(fn => fn !== callback);
+        const idx = this.#wildcardListeners.indexOf(callback);
+        if (idx !== -1) this.#wildcardListeners.splice(idx, 1);
       };
     }
 
     if (!this.#listeners.has(event)) {
       this.#listeners.set(event, []);
     }
-    this.#listeners.get(event).push(callback);
+    const fns = this.#listeners.get(event);
+    fns.push(callback);
 
     return () => {
-      const fns = this.#listeners.get(event);
-      if (fns) {
-        this.#listeners.set(event, fns.filter(fn => fn !== callback));
+      const arr = this.#listeners.get(event);
+      if (arr) {
+        const idx = arr.indexOf(callback);
+        if (idx !== -1) arr.splice(idx, 1);
       }
     };
   }
@@ -57,7 +63,9 @@ export class EventBus {
   emit(event, payload) {
     const fns = this.#listeners.get(event);
     if (fns) {
-      for (const fn of fns) {
+      // Iterate over a snapshot to handle unsubscribe-during-emit safely
+      const snapshot = fns.slice();
+      for (const fn of snapshot) {
         try { fn(payload, event); } catch (err) {
           console.error(`[EventBus] Error in listener for "${event}":`, err);
         }
@@ -75,6 +83,6 @@ export class EventBus {
    */
   removeAll() {
     this.#listeners.clear();
-    this.#wildcardListeners = [];
+    this.#wildcardListeners.length = 0;
   }
 }

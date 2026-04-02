@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Zap, Skull, ShieldOff } from "lucide-react";
 
@@ -17,9 +18,9 @@ interface ChoiceBoxProps {
   loading?: boolean;
 }
 
-export default function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps) {
+const ChoiceBox = memo(function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps) {
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className="p-6 glass rounded-xl border-primary/40 bg-primary/5 flex flex-col gap-6 shadow-[0_0_40px_rgba(0,210,255,0.15)]"
@@ -33,7 +34,7 @@ export default function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps)
 
       <div className="flex flex-col gap-3">
         {/* Option A */}
-        <button 
+        <button
           onClick={() => onSelect('A')}
           disabled={loading}
           className="w-full p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-primary/20 hover:border-primary/50 transition-all text-left group flex items-center justify-between"
@@ -43,7 +44,7 @@ export default function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps)
         </button>
 
         {/* Option B */}
-        <button 
+        <button
           onClick={() => onSelect('B')}
           disabled={loading}
           className="w-full p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-secondary/20 hover:border-secondary/50 transition-all text-left group flex items-center justify-between"
@@ -54,7 +55,7 @@ export default function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps)
 
         {/* Option Gambit (Optional) */}
         {choice.optionGambit && (
-          <button 
+          <button
             onClick={() => onSelect('G')}
             disabled={loading}
             className="w-full p-4 rounded-lg bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/30 hover:from-primary/20 hover:to-secondary/20 hover:border-primary transition-all text-left group flex items-center justify-between relative overflow-hidden"
@@ -72,7 +73,7 @@ export default function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps)
 
         {/* Option Burn (Optional) */}
         {choice.optionBurn && (
-          <button 
+          <button
             onClick={() => onSelect('Burn')}
             disabled={loading}
             className="w-full mt-2 py-2 text-[10px] font-bold text-error/60 uppercase tracking-widest hover:text-error transition-colors flex items-center justify-center gap-2"
@@ -84,4 +85,6 @@ export default function ChoiceBox({ choice, onSelect, loading }: ChoiceBoxProps)
       </div>
     </motion.div>
   );
-}
+});
+
+export default ChoiceBox;

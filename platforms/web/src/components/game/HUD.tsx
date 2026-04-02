@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { Zap, Flame, Clock, ShieldCheck, Hexagon } from "lucide-react";
 
@@ -13,19 +14,18 @@ interface HUDProps {
   phase: string;
 }
 
-export default function HUD({ 
-  influence = 3, 
-  maxInfluence = 6, 
-  heat = 0, 
+const HUD = memo(function HUD({
+  influence = 3,
+  maxInfluence = 6,
+  heat = 0,
   maxHeat = 20,
   turn = 1,
   maxTurns = 12,
   phase = "DAWN"
 }: Partial<HUDProps>) {
-  
-  const infPerc = (influence / maxInfluence) * 100;
-  const heatPerc = (heat / maxHeat) * 100;
-  const clockPerc = (turn / maxTurns) * 100;
+  const infPerc = Math.min((influence / maxInfluence) * 100, 100);
+  const heatPerc = Math.min((heat / maxHeat) * 100, 100);
+  const clockPerc = Math.min((turn / maxTurns) * 100, 100);
 
   return (
     <div className="w-full glass rounded-xl p-4 flex items-center justify-between gap-8 h-20 border-b border-border shadow-2xl z-20">
@@ -38,12 +38,12 @@ export default function HUD({
             <span className="text-foreground-muted font-mono leading-none">/ {maxTurns}</span>
           </div>
         </div>
-        
+
         <div className="h-10 w-[1px] bg-border" />
-        
+
         <div className="flex flex-col">
           <span className="text-[10px] font-bold tracking-widest text-foreground-muted uppercase">Phase</span>
-          <motion.span 
+          <motion.span
             key={phase}
             initial={{ y: 5, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -66,7 +66,7 @@ export default function HUD({
             <span className="text-sm font-bold font-mono text-primary">{influence} / {maxInfluence}</span>
           </div>
           <div className="hud-bar relative shadow-[0_0_15px_rgba(0,210,255,0.1)]">
-            <motion.div 
+            <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${infPerc}%` }}
               className="hud-bar-fill bg-gradient-to-r from-primary to-[#0082FF]"
@@ -84,7 +84,7 @@ export default function HUD({
             <span className="text-sm font-bold font-mono text-error">{heat} / {maxHeat}</span>
           </div>
           <div className="hud-bar">
-            <motion.div 
+            <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${heatPerc}%` }}
               className="hud-bar-fill bg-gradient-to-r from-error via-[#FF7E00] to-warning"
@@ -96,7 +96,7 @@ export default function HUD({
 
       {/* Quick Stats / Icons */}
       <div className="flex items-center gap-4">
-        <motion.div 
+        <motion.div
           whileHover={{ scale: 1.05 }}
           className="w-10 h-10 rounded-lg glass flex items-center justify-center text-foreground-muted hover:text-primary transition-colors cursor-help"
           title="Stash Assets: 0"
@@ -106,8 +106,8 @@ export default function HUD({
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full" />
           </div>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           whileHover={{ scale: 1.05 }}
           className="w-10 h-10 rounded-lg glass flex items-center justify-center text-foreground-muted hover:text-error transition-colors cursor-help"
           title="Ledger Grudges: 0"
@@ -117,4 +117,6 @@ export default function HUD({
       </div>
     </div>
   );
-}
+});
+
+export default HUD;

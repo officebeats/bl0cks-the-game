@@ -97,10 +97,17 @@ export function updateState(state, patch) {
 /**
  * Create a state snapshot for save/export.
  * Strips internal metadata and freezing.
+ *
+ * Performance: Uses structuredClone when available (V8 >= 105, Node >= 17)
+ * instead of JSON round-trip, which loses undefined values, functions, and
+ * circular references. Falls back to JSON for older runtimes.
  * @param {GameState} state
  * @returns {object}
  */
 export function exportState(state) {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(state);
+  }
   return JSON.parse(JSON.stringify(state));
 }
 

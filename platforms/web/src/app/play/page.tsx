@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import HUD from "@/components/game/HUD";
 import Board from "@/components/game/Board";
@@ -13,49 +13,49 @@ export default function PlayPage() {
   const { state, engineStats, loading, error, startLevel, sendAction } = useEngine();
   const [booting, setBooting] = useState(true);
 
-  // Initialize Level on mount
+  // Initialize Level on mount — no artificial delay
   useEffect(() => {
+    let cancelled = false;
     const init = async () => {
-      // Simulate ROM loading "Wow" delay
-      await new Promise(r => setTimeout(r, 1500));
       await startLevel('01', 'chicago');
-      setBooting(false);
+      if (!cancelled) setBooting(false);
     };
     init();
+    return () => { cancelled = true; };
   }, [startLevel]);
 
   // Handle Gameplay Audio changes based on Level
   useEffect(() => {
-    if (state?.levelNumber) {
-      const padded = String(state.levelNumber).padStart(2, '0');
-      window.dispatchEvent(new CustomEvent('bl0cks-audio-change', { 
-        detail: { src: `/audio/level-${padded}.mp3` } 
+    if (state && typeof state === 'object' && 'levelNumber' in state) {
+      const levelNumber = (state as { levelNumber: number }).levelNumber;
+      const padded = String(levelNumber).padStart(2, '0');
+      window.dispatchEvent(new CustomEvent('bl0cks-audio-change', {
+        detail: { src: `/audio/level-${padded}.mp3` }
       }));
     }
-  }, [state?.levelNumber]);
+  }, [state]);
 
-  const handleSelect = (option: string) => {
+  const handleSelect = useCallback((option: string) => {
     sendAction(option);
-  };
+  }, [sendAction]);
 
-  const handlePlayCard = (cardId: string) => {
-    // Engine expects card index or ID in CLI, let's assume it handles ID if we send it in quotes or similar
-    // Actually, common engine input for cards is the name or index. 
-    // We'll send the ID and let the bridge/controller resolve it.
+  const handlePlayCard = useCallback((cardId: string) => {
     sendAction(`PLAY ${cardId}`);
-  };
+  }, [sendAction]);
+
+  const typedState = state as Record<string, unknown> | null;
 
   // Show "Booting / Loading" screen
   if (booting || !state) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-black bg-pattern gap-8">
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="flex flex-col items-center gap-6"
         >
           <div className="relative w-24 h-24">
-            <motion.div 
+            <motion.div
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
               className="absolute inset-0 border-t-2 border-primary rounded-full"
@@ -66,12 +66,12 @@ export default function PlayPage() {
           </div>
           <div className="flex flex-col items-center gap-2">
             <h2 className="text-xl font-bold font-outfit uppercase tracking-widest gradient-text">Initializing Engine</h2>
-            <p className="text-xs font-mono text-foreground-muted">Loading CHICAGO ROM — Connecting to AI Instance...</p>
+            <p className="text-xs font-mono text-foreground-muted">Loading ROM — Connecting to AI Instance...</p>
           </div>
         </motion.div>
-        
+
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="glass-card border-error/30 p-4 max-w-sm flex items-start gap-3 bg-error/5"
@@ -80,7 +80,7 @@ export default function PlayPage() {
             <div className="flex flex-col gap-1">
               <span className="text-sm font-bold text-error uppercase">Connection Error</span>
               <p className="text-xs text-foreground-muted">{error}</p>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="mt-2 text-[10px] uppercase font-bold text-error hover:underline"
               >
@@ -96,22 +96,22 @@ export default function PlayPage() {
   // Active Game UI
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-pattern selection:bg-primary selection:text-black">
-      
+
       {/* Top HUD */}
-      <motion.div 
+      <motion.div
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 100 }}
         className="w-full z-50"
       >
-        <HUD 
-          influence={engineStats?.influence} 
-          maxInfluence={engineStats?.maxInfluence} 
-          heat={engineStats?.heat} 
-          maxHeat={20} 
-          turn={engineStats?.turn} 
-          maxTurns={state?.clock?.total || 12} 
-          phase={engineStats?.phase || "SCHEME"} 
+        <HUD
+          influence={(engineStats as Record<string, number>)?.influence}
+          maxInfluence={(engineStats as Record<string, number>)?.maxInfluence}
+          heat={(engineStats as Record<string, number>)?.heat}
+          maxHeat={20}
+          turn={(engineStats as Record<string, number>)?.turn}
+          maxTurns={(typedState?.clock as Record<string, number>)?.total || 12}
+          phase={(engineStats as Record<string, string>)?.phase || "SCHEME"}
         />
       </motion.div>
 
@@ -120,38 +120,39 @@ export default function PlayPage() {
         <div className="flex-1 overflow-y-auto no-scrollbar scroll-smooth bg-black/20">
           <div className="max-w-6xl mx-auto py-12 px-8">
             <header className="mb-12 flex flex-col gap-2">
-               <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] text-primary uppercase">
-                 <span className="w-8 h-[1px] bg-primary" /> Level 0{state?.levelNumber || '1'}
-               </div>
-               <h1 className="text-5xl font-outfit font-black uppercase tracking-tight">
-                 {state?.levelName?.split(':')?.[0] || 'Chicago'}: <span className="gradient-text">{state?.levelName?.split(':')?.[1] || 'South Side'}</span>
-               </h1>
-               <div className="flex items-center gap-4 mt-2">
-                 <div className="h-4 w-[2px] bg-border" />
-                 <p className="text-foreground-muted text-sm max-w-lg">
-                   {state?.event?.name || 'Awaiting orders.'}
-                 </p>
-               </div>
+              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.3em] text-primary uppercase">
+                <span className="w-8 h-[1px] bg-primary" /> Level 0{typedState?.levelNumber || '1'}
+              </div>
+              <h1 className="text-5xl font-outfit font-black uppercase tracking-tight">
+                {(typedState?.levelName as string)?.split(':')?.[0] || 'Chicago'}:
+                <span className="gradient-text">{(typedState?.levelName as string)?.split(':')?.[1] || 'South Side'}</span>
+              </h1>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="h-4 w-[2px] bg-border" />
+                <p className="text-foreground-muted text-sm max-w-lg">
+                  {(typedState?.event as Record<string, string>)?.name || 'Awaiting orders.'}
+                </p>
+              </div>
             </header>
 
-            <Board territories={state?.territories || []} />
-            
+            <Board territories={(typedState?.territories as Array<Record<string, unknown>>) || []} />
+
             {/* Added spacer for Hand Area */}
             <div className="h-[280px]" />
           </div>
         </div>
 
         {/* Right: Narrator Panel (Sidebar) */}
-        <motion.aside 
+        <motion.aside
           initial={{ x: 400 }}
           animate={{ x: 0 }}
           className="w-[400px] hidden lg:block z-30"
         >
-          <Narrator 
-            event={state?.event} 
-            choice={state?.choice}
-            scanner={state?.scanner} 
-            history={state?.history || []}
+          <Narrator
+            event={typedState?.event as { name: string; description: string } | undefined}
+            choice={typedState?.choice as { description: string; optionA: string; optionB: string; optionBurn?: string; optionGambit?: string } | undefined}
+            scanner={typedState?.scanner as string | undefined}
+            history={(typedState?.history as string[]) || []}
             loading={loading}
             onSelect={handleSelect}
           />
@@ -159,12 +160,12 @@ export default function PlayPage() {
       </div>
 
       {/* Bottom: Hand Area */}
-      <Hand cards={state?.hand || []} onPlay={handlePlayCard} />
+      <Hand cards={(typedState?.hand as Array<Record<string, unknown>>) || []} onPlay={handlePlayCard} />
 
       {/* Loading Overlay for mid-turn actions */}
       <AnimatePresence>
         {loading && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
