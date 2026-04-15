@@ -1,164 +1,149 @@
-# BL0CKS — The AI Strategy Card Game
+<p align="center">
+  <img src="docs/screenshots/splash.png" alt="BL0CKS — The AI Strategy Card Game" width="720">
+</p>
 
-> **Territory. Trust. Time.**
+<h1 align="center">BL0CKS — The AI Strategy Card Game</h1>
 
-BL0CKS is the first strategy card game built natively on AI — powered by any major LLM provider. Set against the hyper-specific geography of Chicago's South Side, it asks players to manage alliances, information, and loyalty in a world where everyone is playing their own game.
+<p align="center">
+  <strong>Territory. Trust. Time.</strong><br>
+  <em>The first strategy card game powered entirely by AI — built with markdown, played in your terminal.</em>
+</p>
 
-Every character has a **visible loyalty score** and a **hidden true motive** known only to the AI. Every decision costs clock ticks. Betrayals aren't random — they're earned outcomes of your own risk tolerance.
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-how-it-works">How It Works</a> •
+  <a href="#-screenshots">Screenshots</a> •
+  <a href="#-create-your-own-game">Create Your Own</a> •
+  <a href="#-architecture">Architecture</a>
+</p>
 
-```
-╭────────────────────────────────────────────────────────╮
-│  ░▒▓  ★  V I C T O R Y  ★  ▓▒░                       │
-│                    ♛                                   │
-│            ▄█████████▄                                 │
-│   "You held the block. The corner knows your name."    │
-│                                                        │
-│            ─────────────────────                       │
-│            "Territory. Trust. Time."                   │
-╰────────────────────────────────────────────────────────╯
-```
+---
+
+## 🤖 100% AI-Built. Bring Your Own Key.
+
+BL0CKS is a **fully AI-built** strategy card game that runs in your terminal. Every game session is powered by **your own AI API key** — Gemini, Claude, OpenAI, or the free Kilo gateway. No server. No subscription. No data collection. **Your key never leaves your machine.**
+
+The entire game world — characters, factions, events, dialogue — is defined in **plain markdown files**. The AI reads them and improvises a unique experience every playthrough. No two games are the same.
+
+> **Think Slay the Spire meets The Wire** — a deck-building strategy game where an AI game master runs the world, characters have hidden motives, and every decision costs something.
+
+### Why BL0CKS?
+
+- 🎮 **Non-deterministic gameplay** — AI generates unique events, dialogue, and outcomes every session
+- 🔑 **Bring Your Own Key (BYOK)** — Use any major LLM. Your API key stays local.
+- 📝 **Modular markdown content** — All game content is plain `.md` files. Fork and reskin in hours.
+- 🏆 **Leaderboard-friendly** — Deterministic scoring (Ticks × 1000 + Territories × 2000 + Loyalty × 500) despite non-deterministic gameplay
+- 🖥️ **Immersive terminal UI** — 24-bit color, ASCII card art, screen effects, typewriter narration
+- 🧩 **ROM architecture** — Swap entire game worlds like cartridges. Community ROMs welcome.
 
 ---
 
 ## 🎮 Quick Start
 
 ```bash
-# Clone the repository
+# Clone and install
 git clone https://github.com/officebeats/bl0cks-the-game.git
-cd bl0cks-the-game
+cd bl0cks-the-game && npm install
 
-# Install dependencies
-npm install
-
-# Play (requires AI API key)
+# Play
 npm start
-
-# Optional: disable alternate screen buffer
-npm start -- --no-altscreen
 ```
 
-You'll be prompted to enter an API key from any supported provider:
-- **Gemini** (`AIza...`) — Recommended
-- **Claude** (`sk-ant-...`)
-- **OpenAI** (`sk-...`)
-- **Kilo** — Free shareware gateway (200 requests/day)
+You'll be prompted to choose your AI provider and paste your API key:
+
+| Provider | Key Format | Notes |
+|---|---|---|
+| **Gemini** | `AIza...` | Recommended — fast, cheap, great at roleplay |
+| **Claude** | `sk-ant-...` | Deep narrative, extended thinking |
+| **OpenAI** | `sk-...` | GPT-4o, reliable |
+| **Kilo** | Free | Shareware gateway — 200 requests/day, no key needed |
+
+> 💡 **Your key is stored locally** in `~/.bl0cks/config.json` and never transmitted anywhere except directly to your chosen AI provider.
 
 ---
 
-## 🖥️ Terminal Experience
+## 📸 Screenshots
 
-BL0CKS runs in an **immersive terminal UI** with a full ASCII art renderer:
+### The Board — Your Command Center
 
-| Feature | Description |
-|---|---|
-| **Alternate Screen** | Game runs in its own screen buffer (like vim). `--no-altscreen` to disable. |
-| **Fanned Card Layout** | Cards displayed in a parabolic arc with overlap, drop shadows, and faction-colored borders |
-| **Paged Layout** | Dramatic **Whisper → Play** flow. Events and enemy intent shown on their own screen before your hand. |
-| **Contextual Narrator** | `THE BLOCK │ Feds circling. Keep it quiet.` — Prompt text reacts to heat, influence, clock, and threats. |
-| **Screen Reactions** | Red flash on betrayal, dim on territory loss, shake on gambit failure |
-| **Typewriter Text** | Narrative streams char-by-char for dramatic pacing |
-| **Gradient Text** | 24-bit color gradients on victory scores and dramatic moments |
-| **ROM Theming** | Custom color palettes loaded from `assets/theme.json` per ROM |
-| **720p Optimized** | Every screen verified to fit 80×24 terminal (tight 720p) |
+<p align="center">
+  <img src="docs/screenshots/board.png" alt="BL0CKS game board showing HUD with influence, heat meter, hand of cards, and play prompt" width="720">
+</p>
 
-### Card Types — Visual Identity
+*Influence bar, Heat meter, enemy intel, and your hand of cards — all in one screen. Plays on any terminal that supports 24-bit color.*
 
-```
-╭── PEOPLE ──────╮  ╭── MOVES ──────╮  ╭── DEAD DRAW ──╮
-│ 1·DARIUS WEBB  │  │ 1·⚔ TAX      │  │ 1·🔥PARANOIA  │
-│   Broker       │  │   Collect     │  │   DEAD DRAW   │
-│   Governors    │  │   resources   │  │   Cannot be   │
-│   Woodlawn     │  │   from a      │  │   played.     │
-│   Loy: 7       │  │   controlled  │  │   Burn to     │
-│   ████████░░   │  │   block.      │  │   remove.     │
-│   ░░░░░░░░░░░  │  │   █████       │  │   BURN →      │
-╰────────────────╯  ╰───────────────╯  ╰───────────────╯
- Blue border          Red border         Red background
- Faction-colored      ⚔ + accent        🔥 + dim text
-```
+### Street Whisper — Dramatic Event Reveal
+
+<p align="center">
+  <img src="docs/screenshots/whisper.png" alt="BL0CKS whisper screen showing event narrative and incoming threat" width="720">
+</p>
+
+*Before each turn, events and enemy intents are revealed on their own dramatic screen. Press any key when you're ready to see your hand.*
+
+### Victory — Screenshot-Worthy Wins
+
+<p align="center">
+  <img src="docs/screenshots/win.png" alt="BL0CKS victory screen with star burst pattern and trophy" width="720">
+</p>
+
+*Every win is built to be shared. Star burst pattern, trophy icon, and your unique victory narrative generated by AI.*
 
 ---
 
-## 🏗️ Architecture (v2)
-
-BL0CKS uses an **Engine + ROM** architecture — the game engine is content-agnostic, and all world content loads from swappable ROM packages.
+## 🧠 How It Works
 
 ```
-bl0cks-the-game/
-├── engine/                    # Core game engine (content-agnostic)
-│   ├── index.js               # Public API: BL0CKS.boot()
-│   ├── ai/                    # AI provider routing & adapters
-│   │   ├── router.js          #   Provider auto-detection
-│   │   ├── prompt-builder.js  #   ROM → system prompt assembly
-│   │   ├── response-parser.js #   AI output → game state
-│   │   └── adapters/          #   Provider-specific adapters
-│   │       ├── gemini.js      #     Google Gemini
-│   │       ├── claude.js      #     Anthropic Claude
-│   │       ├── openai.js      #     OpenAI GPT
-│   │       ├── kilo.js        #     Kilo free gateway
-│   │       ├── ollama.js      #     Local Ollama models
-│   │       └── mock.js        #     Deterministic testing
-│   ├── cards/                 # Card engine
-│   │   ├── types.js           #   Card type schemas & factories
-│   │   ├── deck.js            #   Draw/discard/exhaust pile mgmt
-│   │   ├── keywords.js        #   Keyword synergy system
-│   │   ├── moves.js           #   Move card execution logic
-│   │   ├── gambit.js          #   High-risk gambit system
-│   │   └── stash.js           #   Post-level asset rewards
-│   ├── core/                  # Game mechanics
-│   │   ├── game.js            #   Game controller & state machine
-│   │   ├── state.js           #   Immutable state management
-│   │   ├── phases.js          #   10-phase turn sequence
-│   │   ├── influence.js       #   Action economy (Influence)
-│   │   ├── heat.js            #   Escalation pressure (Heat Meter)
-│   │   ├── combat.js          #   War resolution logic
-│   │   ├── scoring.js         #   Score calculation & grading
-│   │   └── ledger.js          #   Cross-level consequence tracker
-│   ├── content/               # ROM loader pipeline
-│   │   ├── loader.js          #   ROM discovery & loading
-│   │   ├── manifest.js        #   Manifest parsing
-│   │   ├── resolver.js        #   File resolution
-│   │   ├── validator.js       #   Schema validation
-│   │   └── merger.js          #   DLC overlay merging
-│   └── events/                # Engine ↔ Platform pub/sub
-│       ├── emitter.js         #   EventBus implementation
-│       └── events.js          #   Event type constants
-│
-├── roms/                      # Game content packages
-│   ├── chicago/               # Base ROM: South Side Chicago
-│   │   ├── manifest.json      #   ROM metadata & structure
-│   │   ├── levels/            #   Level definition files (12 levels)
-│   │   ├── world/             #   Factions, territory, lore, aesthetics
-│   │   ├── cards/             #   Card templates & custom cards
-│   │   ├── prompts/           #   AI prompt files
-│   │   └── assets/            #   Theme, audio, visual assets
-│   └── _template/             # Starter kit for community ROMs
-│
-├── platforms/                 # Platform shells
-│   ├── cli/                   # Terminal interface
-│   │   ├── bin/bl0cks.js      #   CLI entry point + alt screen buffer
-│   │   ├── commands/play.js   #   Game loop, paged layout, scoring
-│   │   └── lib/
-│   │       ├── renderer.js    #   Cell-buffer terminal renderer
-│   │       ├── effects.js     #   Typewriter, gradients, screen fx
-│   │       ├── input.js       #   Readline + raw mode input
-│   │       ├── menus.js       #   Config, sessions, provider select
-│   │       ├── splash.js      #   Animated boot splash + tutorial
-│   │       └── audio.js       #   Background audio playback
-│   └── web/                   # Web interface (planned)
-│
-├── tools/                     # Developer tools
-│   ├── rom-validator.mjs      #   Validate ROM packages
-│   └── gen-logo.mjs           #   Logo generation utility
-│
-├── cloud/                     # Cloud services (stub)
-│   └── index.js               #   Marketplace, leaderboard, auth
-│
-└── docs/                      # Documentation
-    ├── GDD.md                 #   Game Design Document v3
-    ├── MVP_PLAN.md            #   Development plan
-    └── STS_MECHANICS_INTEGRATION.md  #   Mechanics reference
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  MARKDOWN    │────▶│   ENGINE     │────▶│  YOUR LLM    │
+│  ROM FILES   │     │  (Node.js)   │     │  (BYOK)      │
+│              │     │              │     │              │
+│  • levels/   │     │  Reads .md   │     │  Gemini /    │
+│  • world/    │     │  files and   │     │  Claude /    │
+│  • prompts/  │     │  builds AI   │     │  OpenAI /    │
+│  • cards/    │     │  prompts     │     │  Kilo        │
+└──────────────┘     └──────┬───────┘     └──────┬───────┘
+                            │                     │
+                            ▼                     ▼
+                     ┌──────────────┐     ┌──────────────┐
+                     │  GAME STATE  │◀────│  AI RESPONSE │
+                     │              │     │              │
+                     │  Influence   │     │  Events      │
+                     │  Heat Meter  │     │  Dialogue    │
+                     │  Cards       │     │  Betrayals   │
+                     │  Territories │     │  Outcomes    │
+                     └──────┬───────┘     └──────────────┘
+                            │
+                            ▼
+                     ┌──────────────┐
+                     │  TERMINAL    │
+                     │  RENDERER    │
+                     │              │
+                     │  ASCII cards │
+                     │  24-bit color│
+                     │  Screen fx   │
+                     └──────────────┘
 ```
+
+### The Markdown-First Design
+
+Every piece of game content is a plain markdown file:
+
+```markdown
+# Level 01 — The Corner (roms/chicago/levels/level_01.md)
+
+## Setting
+Woodlawn, 63rd & Cottage Grove. Your first day running the block.
+
+## Win Condition
+Control 2+ territories by clock tick 12.
+
+## Starting Hand
+- Darius Webb (People, Broker, Loyalty: 7)
+- Tax (Move, collect resources)
+- War (Move, contest territory)
+```
+
+The engine reads these files, assembles them into AI prompts, and the LLM generates the game world in real-time. **Want a cyberpunk version? A fantasy kingdom? A corporate thriller?** Just write new markdown files.
 
 ---
 
@@ -166,94 +151,137 @@ bl0cks-the-game/
 
 | System | Description |
 |---|---|
-| **10-Phase Turn** | Dawn → Draw → Street Whisper → Scheme → Act → Combo → Burn → Intent → Heat Check → Dusk |
-| **Influence** | Per-turn action budget (3 base, 6 max). Use it or lose it. |
-| **Cards** | **Crew** (people with hidden loyalty), **Plays** (7 move types), **Dead Draws** (status cards that clog your hand) |
-| **Keywords** | Block ⛨ · Connect ◆ · Flip ☠ · Hustle 💰 · Fortify 🏰 · Shadow 👻 · Rally 📢 |
-| **Heat Meter** | Global escalation: Low → Warm → Hot → On Fire → Federal |
-| **Enemy Intent** | Slay the Spire-style — rivals telegraph their next move so you can counter |
-| **Gambits** | High-risk/reward 3rd option. Hidden stat checks. Irreversible. |
-| **The Stash** | Post-level asset picks. 12 permanent buffs that stack. |
-| **The Ledger** | Cross-level memory. Grudges, debts, reputation carry forward. |
+| **Influence** | Per-turn action budget (3 base, 6 max). Every card costs influence. Use it or lose it. |
+| **Heat Meter** | Global escalation tracker: Low → Warm → Hot → On Fire → **Federal**. Too much heat and the feds shut you down. |
+| **Enemy Intent** | Slay the Spire-style — rivals telegraph their next move so you can counter or prepare. |
+| **Crew Cards** | People with hidden loyalty scores. The AI knows their true motives. You see the loyalty number. Trust it? |
+| **Play Cards** | 7 action types: TAX, WAR, RALLY, HUSTLE, SHADOW, FORTIFY, FLIP |
+| **Dead Draws** | Status cards that clog your hand. Can't play them — must BURN to remove. |
+| **Gambits** | High-risk 3rd option. Hidden stat checks. Irreversible. The AI decides the outcome. |
+| **The Ledger** | Cross-level memory. Grudges, debts, and reputation carry forward between levels. |
 
----
+### The 10-Phase Turn
 
-## 🎯 Design Philosophy
-
-> **Every turn must force the player to make a decision they feel in their gut.**
-
-The question is never "what should I do?" — it's "what can I afford to *lose*?"
-
-Three pillars govern all design decisions:
-1. **Territory** — Geography is the board. Blocks are the unit of power.
-2. **Trust** — Everyone has a visible loyalty and a hidden motive. Information costs resources.
-3. **Time** — Every action costs clock ticks. The scanner ticks. Rivals move. Deliberation has a price.
-
----
-
-## 🔌 AI Provider Editions
-
-| Edition | API Key | Exclusive Content |
-|---|---|---|
-| Gemini Edition | `AIza...` | The Wire DLC, prismatic cards |
-| Claude Edition | `sk-ant-...` | Deception Arc, extended thinking |
-| GPT Edition | `sk-...` | Informant mechanic unlock |
-| Kilo Edition | Free | Shareware gateway, 200 requests/day |
-| Community Edition | Local/free | Community cards, open source |
-
----
-
-## 🛠️ For Developers
-
-### Creating a ROM
-
-ROMs are self-contained game content packages. Use the template:
-
-```bash
-cp -r roms/_template roms/my-new-rom
-# Edit manifest.json, add levels, world, prompts, cards
-node tools/rom-validator.mjs roms/my-new-rom
+```
+Dawn → Draw → Street Whisper → Scheme → Act → Combo → Burn → Intent → Heat Check → Dusk
 ```
 
-### ROM Theme Colors
+Every turn follows this sequence. The AI handles it seamlessly — you just play cards and make decisions.
 
-Create `assets/theme.json` in your ROM to customize the terminal palette:
+---
+
+## 🧩 Create Your Own Game
+
+BL0CKS uses a **ROM architecture** — the engine is content-agnostic. All game worlds are self-contained packages of markdown files called ROMs.
+
+```bash
+# Copy the template
+cp -r roms/_template roms/my-cyberpunk-rom
+
+# Edit the files
+├── manifest.json          # ROM metadata, faction names, settings
+├── levels/                # Level definitions (markdown)
+├── world/                 # Factions, territories, lore (markdown)
+├── prompts/               # AI system prompts (markdown)
+├── cards/                 # Card templates (markdown)
+└── assets/
+    └── theme.json         # Custom terminal color palette
+```
+
+### Custom Theme Colors
+
+Every ROM can define its own terminal palette via `assets/theme.json`:
 
 ```json
 {
   "palette": {
-    "primary": "#3498DB",
-    "secondary": "#2C3E50",
-    "accent": "#E74C3C",
-    "surface": "#1A1A2E",
-    "text": "#F2F2F2",
-    "muted": "#888888"
+    "primary": "#00FFFF",
+    "accent": "#FF00FF",
+    "surface": "#0A0A1A"
   },
   "factions": {
-    "your_faction_1": "#3498DB",
-    "your_faction_2": "#E74C3C"
-  },
-  "ui": {
-    "card_bg": "#252542",
-    "card_shadow": "#0D0D0D"
+    "netrunners": "#00FFFF",
+    "megacorps": "#FF0066"
   }
 }
+```
+
+### Validate Your ROM
+
+```bash
+node tools/rom-validator.mjs roms/my-cyberpunk-rom
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+bl0cks-the-game/
+├── engine/                    # Core game engine (content-agnostic)
+│   ├── index.js               # Public API: BL0CKS.boot()
+│   ├── ai/                    # AI provider routing & adapters
+│   │   ├── router.js          #   Provider auto-detection
+│   │   ├── prompt-builder.js  #   ROM markdown → AI prompt assembly
+│   │   ├── response-parser.js #   AI output → structured game state
+│   │   └── adapters/          #   Gemini, Claude, OpenAI, Kilo, Ollama, Mock
+│   ├── cards/                 # Card engine (deck, draw, burn, exhaust)
+│   ├── core/                  # Game state, phases, influence, heat, combat, scoring
+│   ├── content/               # ROM loader: discovery, parsing, validation, DLC merging
+│   └── events/                # Engine ↔ Platform event bus
+│
+├── roms/                      # Game content packages (markdown + JSON)
+│   ├── chicago/               # Base ROM: South Side Chicago (12 levels)
+│   └── _template/             # Starter kit for community ROMs
+│
+├── platforms/cli/             # Terminal interface
+│   ├── bin/bl0cks.js          # Entry point, alt screen buffer, boot sequence
+│   ├── commands/play.js       # Game loop, paged layout, scoring
+│   └── lib/
+│       ├── renderer.js        # Cell-buffer ASCII renderer (24-bit color)
+│       ├── effects.js         # Typewriter, gradients, screen reactions
+│       ├── input.js           # Terminal input handling
+│       └── menus.js           # Config, provider select, session management
+│
+└── docs/                      # Game design docs & screenshots
 ```
 
 ### Engine API
 
 ```js
-import { BL0CKS } from '@bl0cks/engine';
+import { BL0CKS } from './engine/index.js';
 
-const engine = await BL0CKS.boot('./roms/chicago', { apiKey: 'AIza...' });
+const engine = await BL0CKS.boot('./roms/chicago', { apiKey: 'YOUR_KEY' });
 const state = await engine.startLevel('01');
-
-engine.on('turn.rendered', (state) => {
-  // Render the game state
-});
-
-const nextState = await engine.sendAction('Play Darius Webb on Auburn Gresham');
+const next = await engine.sendAction('Play Darius Webb on Auburn Gresham');
 ```
+
+---
+
+## 🖥️ Terminal Features
+
+| Feature | Description |
+|---|---|
+| **Alternate Screen** | Game runs in its own buffer (like vim). `--no-altscreen` to disable. |
+| **Fanned Card Layout** | Parabolic arc with overlap, drop shadows, faction-colored borders |
+| **Paged Whisper → Play** | Events shown on dramatic screen before your hand |
+| **Contextual Narrator** | `THE BLOCK │ Feds circling.` — reacts to game state |
+| **Screen Reactions** | Red flash on betrayal, dim on territory loss, shake on gambit fail |
+| **Typewriter Text** | Char-by-char streaming at 15ms for cinematic pacing |
+| **24-bit Gradient** | Per-character RGB interpolation on scores and dramatic moments |
+| **ROM Theming** | Custom palettes from `assets/theme.json` |
+| **720p Optimized** | Every screen fits 80×24 terminal |
+
+---
+
+## 🔌 AI Provider Editions
+
+| Edition | Key | Exclusive Content |
+|---|---|---|
+| Gemini | `AIza...` | The Wire DLC, prismatic cards |
+| Claude | `sk-ant-...` | Deception Arc, extended thinking |
+| GPT | `sk-...` | Informant mechanic unlock |
+| Kilo | Free | 200 requests/day — no key needed |
 
 ---
 
@@ -265,4 +293,11 @@ The engine is the product. The world is the canvas.
 
 ---
 
-*Created by [Ernesto "Beats" Rodriguez](https://github.com/officebeats)*
+<p align="center">
+  <em>Built entirely with AI assistance. Every line of code, every game mechanic, every pixel of ASCII art.</em><br>
+  <strong>Created by <a href="https://github.com/officebeats">Ernesto "Beats" Rodriguez</a></strong>
+</p>
+
+<p align="center">
+  <strong>Keywords:</strong> ai game, terminal game, cli game, strategy card game, slay the spire, bring your own key, byok, llm game, ai powered game, ascii art game, markdown game, modular game engine, gemini game, claude game, openai game, roguelike, deck builder, node.js game
+</p>
