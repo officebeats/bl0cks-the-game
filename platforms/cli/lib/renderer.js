@@ -21,8 +21,35 @@ function getW() {
 // Legacy compat — some functions receive W as parameter
 const W = 80; // fallback only, prefer getW()
 
+// ── Hex Color Utilities ─────────────────────────────────────────
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  return [
+    parseInt(h.substring(0, 2), 16),
+    parseInt(h.substring(2, 4), 16),
+    parseInt(h.substring(4, 6), 16),
+  ];
+}
+
+function hexToAnsi(hex) {
+  const [r, g, b] = hexToRgb(hex);
+  return `\x1b[38;2;${r};${g};${b}m`;
+}
+
+function hexToBgAnsi(hex) {
+  const [r, g, b] = hexToRgb(hex);
+  return `\x1b[48;2;${r};${g};${b}m`;
+}
+
+// Darken a hex color for background use (30% brightness)
+function hexToBgDark(hex) {
+  const [r, g, b] = hexToRgb(hex);
+  return `\x1b[48;2;${Math.round(r * 0.3)};${Math.round(g * 0.3)};${Math.round(b * 0.3)}m`;
+}
+
 // ── ANSI True-Color Palette ──────────────────────────────────────
-const A = {
+// Mutable so ROM themes can override via applyTheme()
+let A = {
   reset:     '\x1b[0m',
   bold:      '\x1b[1m',
   dim:       '\x1b[2m',
@@ -68,7 +95,8 @@ const A = {
 };
 
 // ── Faction Color Map ────────────────────────────────────────────
-const FACTION_STYLE = {
+// Mutable — ROM themes can override via applyTheme()
+let FACTION_STYLE = {
   'governors':  { fg: A.blue,   bg: A.bgBlue,   accent: '\x1b[38;2;80;140;220m' },
   'lords':      { fg: A.gold,   bg: A.bgGold,   accent: '\x1b[38;2;255;210;60m' },
   'stones':     { fg: A.red,    bg: A.bgRed,     accent: '\x1b[38;2;240;70;60m'  },
@@ -79,6 +107,59 @@ const FACTION_STYLE = {
   'you':        { fg: A.green,  bg: A.bgGreen,   accent: A.green },
   'default':    { fg: A.chalk,  bg: A.bgSlate,   accent: A.chalk },
 };
+
+/**
+ * Apply a ROM theme to override the default palette and faction colors.
+ * Reads the theme.json format (supports both Chicago and template schemas).
+ *
+ * @param {object} themeJson - Parsed theme.json from ROM
+ */
+export function applyTheme(themeJson) {
+  if (!themeJson) return;
+
+  // Schema 1: template format (palette + factions + ui)
+  if (themeJson.palette) {
+    if (themeJson.palette.primary)   A.blue   = hexToAnsi(themeJson.palette.primary);
+    if (themeJson.palette.secondary) A.navy   = hexToAnsi(themeJson.palette.secondary);
+    if (themeJson.palette.accent)    A.red    = hexToAnsi(themeJson.palette.accent);
+    if (themeJson.palette.surface)   A.bgSurface = hexToBgAnsi(themeJson.palette.surface);
+    if (themeJson.palette.text)      A.chalk  = hexToAnsi(themeJson.palette.text);
+    if (themeJson.palette.muted)     A.smoke  = hexToAnsi(themeJson.palette.muted);
+  }
+
+  // Schema 2: Chicago format (colors + factions)
+  if (themeJson.colors) {
+    if (themeJson.colors.bg_base)     A.bgBlack   = hexToBgAnsi(themeJson.colors.bg_base);
+    if (themeJson.colors.bg_surface)  A.bgSurface  = hexToBgAnsi(themeJson.colors.bg_surface);
+    if (themeJson.colors.bg_elevated) A.bgCard     = hexToBgAnsi(themeJson.colors.bg_elevated);
+    if (themeJson.colors.accent_red)  A.red        = hexToAnsi(themeJson.colors.accent_red);
+    if (themeJson.colors.accent_gold) A.gold       = hexToAnsi(themeJson.colors.accent_gold);
+    if (themeJson.colors.accent_blue) A.blue       = hexToAnsi(themeJson.colors.accent_blue);
+    if (themeJson.colors.text_primary)   A.chalk    = hexToAnsi(themeJson.colors.text_primary);
+    if (themeJson.colors.text_secondary) A.gray     = hexToAnsi(themeJson.colors.text_secondary);
+    if (themeJson.colors.border)      A.slate      = hexToAnsi(themeJson.colors.border);
+    if (themeJson.colors.success)     A.green      = hexToAnsi(themeJson.colors.success);
+    if (themeJson.colors.error)       A.red        = hexToAnsi(themeJson.colors.error);
+    if (themeJson.colors.warning)     A.orange     = hexToAnsi(themeJson.colors.warning);
+  }
+
+  // UI-specific overrides
+  if (themeJson.ui) {
+    if (themeJson.ui.card_bg)     A.bgCard   = hexToBgAnsi(themeJson.ui.card_bg);
+    if (themeJson.ui.card_shadow) A.bgShadow = hexToBgAnsi(themeJson.ui.card_shadow);
+  }
+
+  // Faction color overrides — works for both schemas
+  const factionMap = themeJson.factions || {};
+  for (const [factionId, hex] of Object.entries(factionMap)) {
+    const key = factionId.toLowerCase().replace(/^the\s+/, '');
+    if (key === 'you' || key === 'contested') continue; // system factions, skip
+    
+    const fg = hexToAnsi(hex);
+    const bg = hexToBgDark(hex);
+    FACTION_STYLE[key] = { fg, bg, accent: fg };
+  }
+}
 
 function factionStyle(faction) {
   if (!faction) return FACTION_STYLE.default;
@@ -373,16 +454,16 @@ function paintMoveCard(buf, cx, cy, card, idx) {
   for (let c = 1; c <= w; c++) bPut(buf, cx + c, cy + h, BOX.light, A.shadow, A.bgDark);
 }
 
-// ── Paint Status Card ────────────────────────────────────────────
+// ── Paint Status Card (Dead Draws — visually dangerous) ─────────
 function paintStatusCard(buf, cx, cy, card, idx) {
   const w = getCardW(), h = CARD_H, inner = w - 2;
-  const cardBg = A.bgCard;
-  const border = A.slate;
-  const accent = A.orange;
+  const cardBg = A.bgRed;      // Red tint — these are BAD cards
+  const border = A.crimson;
+  const accent = A.red;
 
   bFill(buf, cx, cy, w, h, ' ', '', cardBg);
 
-  // Top border — orange accent
+  // Top border — red accent
   bPut(buf, cx, cy, BOX.ctl, accent, cardBg);
   for (let i = 1; i < w - 1; i++) bPut(buf, cx + i, cy, BOX.sh, accent, cardBg);
   bPut(buf, cx + w - 1, cy, BOX.ctr, accent, cardBg);
@@ -398,24 +479,28 @@ function paintStatusCard(buf, cx, cy, card, idx) {
     bPut(buf, cx + w - 1, cy + r, BOX.sv, border, cardBg);
   }
 
-  // Row 1: Index + Warning + Name
+  // Row 1: Index + Fire + Name
   const name = (card.name || '???').substring(0, inner - 6);
   bStr(buf, cx + 1, cy + 1, ` ${idx}`, A.gold, cardBg);
   bPut(buf, cx + 3, cy + 1, '\u00b7', A.smoke, cardBg);
-  bStr(buf, cx + 4, cy + 1, '\u26a0 ', accent, cardBg);
+  bStr(buf, cx + 4, cy + 1, '\ud83d\udd25', accent, cardBg); // 🔥
   bStr(buf, cx + 6, cy + 1, name.toUpperCase().padEnd(inner - 6), accent + A.bold, cardBg);
 
-  // Rows 2-5: Description
-  const desc = card.description || '';
+  // Row 2: DEAD DRAW label (dim, makes it clear this card is cursed)
+  const deadLabel = 'DEAD DRAW'.padEnd(inner - 3);
+  bStr(buf, cx + 1, cy + 2, `  ${deadLabel}`, A.crimson + A.dim, cardBg);
+
+  // Rows 3-5: Description (dimmed)
+  const desc = card.description || 'Cannot be played. Burn to remove.';
   const descLines = wordWrap(desc, inner - 3);
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     const text = (descLines[i] || '').padEnd(inner - 3);
-    bStr(buf, cx + 1, cy + 2 + i, `  ${text}`, A.chalk, cardBg);
+    bStr(buf, cx + 1, cy + 3 + i, `  ${text}`, A.smoke, cardBg);
   }
 
-  // Row 6: Texture bar
-  bStr(buf, cx + 1, cy + 6, '  ', '', cardBg);
-  for (let i = 0; i < 5; i++) bPut(buf, cx + 3 + i, cy + 6, BOX.light, A.rust, cardBg);
+  // Row 6: Burn instruction
+  const burnHint = 'BURN →'.padEnd(inner - 3);
+  bStr(buf, cx + 1, cy + 6, `  ${burnHint}`, A.rust + A.dim, cardBg);
 
   // Drop shadow
   for (let r = 1; r < h; r++) bPut(buf, cx + w, cy + r, BOX.light, A.shadow, A.bgDark);
@@ -563,6 +648,84 @@ function renderTerritoryTile(territory, tileW = 24) {
 }
 
 // ══════════════════════════════════════════════════════════════════
+//  WHISPER SCREEN — dramatic event/intent reveal before play
+// ══════════════════════════════════════════════════════════════════
+
+/**
+ * Render a focused dramatic screen showing the event and enemy intent.
+ * Displayed before the main board in the paged layout:
+ *   Whisper (this) → Play (renderBoard)
+ *
+ * @param {object} state - Parsed game state
+ * @returns {{ text: string, narrativeLines: string[] }} - rendered screen + lines to typewrite
+ */
+export function renderWhisper(state) {
+  const termW = getW();
+  const iW = termW - 2;
+  const out = [];
+  const narrativeLines = [];
+
+  out.push(doubleTop(iW));
+  out.push(doubleRow('', iW));
+
+  // Event
+  if (state.event) {
+    const evtName = (state.event.name || 'UNKNOWN').toUpperCase();
+    out.push(doubleRow(padCenter(`${A.ember}${A.bold}⚡ ${evtName}${A.reset}`, iW), iW));
+    out.push(doubleRow('', iW));
+
+    const desc = state.event.description || '';
+    if (desc) {
+      const descLines = wordWrap(`"${desc}"`, iW - 12);
+      for (const dl of descLines) {
+        out.push(doubleRow(padCenter(`${A.chalk}${A.italic}${dl}${A.reset}`, iW), iW));
+        narrativeLines.push(dl);
+      }
+      out.push(doubleRow('', iW));
+    }
+  }
+
+  // Scanner / Street Whisper
+  if (state.scanner) {
+    out.push(doubleRow(padCenter(`${A.smoke}─────────────────────${A.reset}`, iW), iW));
+    out.push(doubleRow('', iW));
+    const scannerText = state.scanner.replace(/^\"|\"$/g, '');
+    const scanLines = wordWrap(scannerText, iW - 12);
+    for (const sl of scanLines) {
+      out.push(doubleRow(padCenter(`${A.orange}${A.italic}${sl}${A.reset}`, iW), iW));
+      narrativeLines.push(sl);
+    }
+    out.push(doubleRow('', iW));
+  }
+
+  // Enemy Intent — the key Slay the Spire mechanic
+  if (state.enemy_intent) {
+    out.push(doubleRow(padCenter(`${A.smoke}─────────────────────${A.reset}`, iW), iW));
+    out.push(doubleRow('', iW));
+    out.push(doubleRow(padCenter(`${A.crimson}${A.bold}⚠ INCOMING THREAT${A.reset}`, iW), iW));
+    out.push(doubleRow('', iW));
+    const intentLines = wordWrap(state.enemy_intent, iW - 12);
+    for (const il of intentLines) {
+      out.push(doubleRow(padCenter(`${A.crimson}${il}${A.reset}`, iW), iW));
+      narrativeLines.push(il);
+    }
+    out.push(doubleRow('', iW));
+
+    // Intent countdown bar — purely visual urgency
+    const barW = Math.min(20, iW - 20);
+    const bar = `${'▰'.repeat(barW)}`;
+    out.push(doubleRow(padCenter(`${A.crimson}${bar}${A.reset}  ${A.smoke}RESOLVES END OF TURN${A.reset}`, iW), iW));
+  }
+
+  out.push(doubleRow('', iW));
+  out.push(doubleRow(padCenter(`${A.smoke}Press any key...${A.reset}`, iW), iW));
+  out.push(doubleRow('', iW));
+  out.push(doubleBot(iW));
+
+  return { text: out.join('\n'), narrativeLines };
+}
+
+// ══════════════════════════════════════════════════════════════════
 //  FULL BOARD RENDER
 // ══════════════════════════════════════════════════════════════════
 
@@ -648,51 +811,6 @@ export function renderBoard(state) {
     out.push(doubleRow(hudLeft + ' '.repeat(hudGap1) + hudMid + ' '.repeat(hudGap2) + hudRight, iW));
     out.push(doubleMid(iW));
   }
-
-  // ── Territory Map ──
-  const territories = state.territories || [];
-
-  if (tight && territories.length > 0) {
-    // ── Inline territory rows for height-constrained screens ──
-    out.push(doubleRow(`  ${A.bold}${A.chalk}\u2b21 TERRITORIES${A.reset}`, iW));
-    for (const t of territories) {
-      const ctrl = (t.control || '').toLowerCase();
-      let icon, color;
-      if (ctrl === 'you' || ctrl === 'player') { icon = '\u25cf'; color = A.green; }
-      else if (ctrl === 'contested') { icon = '\u25d0'; color = A.amber; }
-      else if (ctrl === 'neutral') { icon = '\u25c7'; color = A.teal; }
-      else { icon = '\u25cb'; color = A.red; }
-      const name = truncate(t.name || '???', 14);
-      const ctrlText = truncate(t.control || '???', 10);
-      const faction = t.faction ? ` ${A.smoke}${t.faction}${A.reset}` : '';
-      out.push(doubleRow(`  ${color}${icon}${A.reset} ${A.chalk}${pad(name, 14)}${A.reset} ${color}${pad(ctrlText, 10)}${A.reset}${faction}`, iW));
-    }
-    out.push(doubleMid(iW));
-  } else if (territories.length > 0) {
-    // ── Full boxed territory tiles for large screens ──
-    out.push(doubleRow(`  ${A.bold}${A.chalk}\u2b21 TERRITORY MAP${A.reset}`, iW));
-    out.push(doubleRow('', iW));
-    let tilesPerRow, tileW;
-    if (iW >= 76) { tilesPerRow = 3; tileW = 24; }
-    else if (iW >= 52) { tilesPerRow = 2; tileW = Math.min(24, Math.floor((iW - 6) / 2)); }
-    else { tilesPerRow = 1; tileW = Math.min(24, iW - 4); }
-    for (let rowStart = 0; rowStart < territories.length; rowStart += tilesPerRow) {
-      const rowTs = territories.slice(rowStart, rowStart + tilesPerRow);
-      const boxes = rowTs.map(t => renderTerritoryTile(t, tileW));
-      const tileH = boxes[0]?.length || 0;
-      for (let line = 0; line < tileH; line++) {
-        let rowStr = '  ';
-        for (let t = 0; t < boxes.length; t++) {
-          rowStr += (boxes[t][line] || pad('', tileW)) + ' ';
-        }
-        out.push(doubleRow(rowStr, iW));
-      }
-      if (rowStart + tilesPerRow < territories.length) out.push(doubleRow('', iW));
-    }
-    out.push(doubleRow('', iW));
-    out.push(doubleMid(iW));
-  }
-
   // ── Event (capped to 2 lines when tight) ──
   if (state.event) {
     const evtName = (state.event.name || 'UNKNOWN').toUpperCase();
@@ -723,6 +841,21 @@ export function renderBoard(state) {
       for (let i = 0; i < scanLines.length; i++) {
         const pfx = i === 0 ? `${A.smoke}${BOX.medium} ` : '    ';
         out.push(doubleRow(`  ${pfx}${A.italic}${A.chalk}${scanLines[i]}${A.reset}`, iW));
+      }
+    }
+    out.push(doubleMid(iW));
+  }
+
+  // ── Enemy Intent ──
+  if (state.enemy_intent) {
+    if (tight) {
+      out.push(doubleRow(`  ${A.crimson}\u26a0${A.reset} ${A.bold}NEXT TURN:${A.reset} ${A.chalk}${truncate(state.enemy_intent, iW - 16)}${A.reset}`, iW));
+    } else {
+      out.push(doubleRow(`  ${A.crimson}${A.bold}\u26a0 ENEMY INTENT${A.reset}`, iW));
+      const intentLines = wordWrap(state.enemy_intent, iW - 8);
+      for (let i = 0; i < intentLines.length; i++) {
+        const pfx = i === 0 ? `${A.smoke}${BOX.medium} ` : '    ';
+        out.push(doubleRow(`  ${pfx}${A.crimson}${intentLines[i]}${A.reset}`, iW));
       }
     }
     out.push(doubleMid(iW));
@@ -797,23 +930,47 @@ export function renderNarrative(text) {
 
 export function renderWin(message) {
   const iW = getW() - 2;
+  const compact = iW < 68;
   const out = [];
   out.push('');
   out.push(doubleTop(iW));
   out.push(doubleRow('', iW));
 
+  if (!compact) {
+    // Star burst pattern
+    out.push(doubleRow(padCenter(`${A.gold}                ✦${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.gold}           ⊹  ${A.bold}★${A.reset}${A.gold}  ⊹${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.amber}      ✧                  ✧${A.reset}`, iW), iW));
+  }
+
+  // Victory header with texture
   const glow = `${A.green}${A.bold}`;
-  const glowLine = `${BOX.light}${BOX.medium}${BOX.dense} \u2605  V I C T O R Y  \u2605 ${BOX.dense}${BOX.medium}${BOX.light}`;
+  const glowLine = `${BOX.light}${BOX.medium}${BOX.dense}  ★  V I C T O R Y  ★  ${BOX.dense}${BOX.medium}${BOX.light}`;
   out.push(doubleRow(padCenter(`${glow}${glowLine}${A.reset}`, iW), iW));
-  out.push(doubleRow('', iW));
-  out.push(doubleRow(padCenter(`${A.gold}        \u265b${A.reset}`, iW), iW));
-  out.push(doubleRow(padCenter(`${A.gold}${A.bold}   \u2584${BOX.full.repeat(9)}\u2584${A.reset}`, iW), iW));
+
+  if (!compact) {
+    out.push(doubleRow(padCenter(`${A.amber}      ✧                  ✧${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.gold}           ⊹  ${A.bold}★${A.reset}${A.gold}  ⊹${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.gold}                ✦${A.reset}`, iW), iW));
+  }
+
   out.push(doubleRow('', iW));
 
-  const lines = wordWrap(message || 'You held the block. The corner is yours.', iW - 10);
+  // Trophy
+  out.push(doubleRow(padCenter(`${A.gold}        ♛${A.reset}`, iW), iW));
+  out.push(doubleRow(padCenter(`${A.gold}${A.bold}   ▄${BOX.full.repeat(9)}▄${A.reset}`, iW), iW));
+  out.push(doubleRow('', iW));
+
+  // Narrative message
+  const lines = wordWrap(message || 'You held the block. The corner knows your name.', iW - 10);
   for (const l of lines) {
-    out.push(doubleRow(padCenter(`${A.chalk}${l}${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.chalk}${A.italic}${l}${A.reset}`, iW), iW));
   }
+  out.push(doubleRow('', iW));
+
+  // Tagline
+  out.push(doubleRow(padCenter(`${A.smoke}─────────────────────${A.reset}`, iW), iW));
+  out.push(doubleRow(padCenter(`${A.smoke}${A.italic}"Territory. Trust. Time."${A.reset}`, iW), iW));
   out.push(doubleRow('', iW));
   out.push(doubleBot(iW));
   return out.join('\n');
@@ -821,22 +978,44 @@ export function renderWin(message) {
 
 export function renderLoss(message) {
   const iW = getW() - 2;
+  const compact = iW < 68;
   const out = [];
   out.push('');
   out.push(doubleTop(iW));
   out.push(doubleRow('', iW));
 
+  if (!compact) {
+    // X pattern
+    out.push(doubleRow(padCenter(`${A.crimson}       ╲         ╱${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.crimson}        ╲       ╱${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.crimson}         ╲     ╱${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.crimson}          ╲   ╱${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.crimson}           ╳${A.reset}`, iW), iW));
+  }
+
+  // Defeat header
   const lossGlow = `${A.red}${A.bold}`;
-  const lossLine = `${BOX.dense}${BOX.medium}${BOX.light} \u2716  D E F E A T  \u2716 ${BOX.light}${BOX.medium}${BOX.dense}`;
+  const lossLine = `${BOX.dense}${BOX.medium}${BOX.light}  ✖  D E F E A T  ✖  ${BOX.light}${BOX.medium}${BOX.dense}`;
   out.push(doubleRow(padCenter(`${lossGlow}${lossLine}${A.reset}`, iW), iW));
-  out.push(doubleRow('', iW));
-  out.push(doubleRow(padCenter(`${A.crimson}${A.dim}${BOX.dense}${BOX.medium}${BOX.light}  ${BOX.light}${BOX.medium}${BOX.dense}${A.reset}`, iW), iW));
+
+  if (!compact) {
+    out.push(doubleRow(padCenter(`${A.crimson}           ╳${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.crimson}          ╱   ╲${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.crimson}         ╱     ╲${A.reset}`, iW), iW));
+  }
+
   out.push(doubleRow('', iW));
 
+  // Narrative message
   const lines = wordWrap(message || 'The block moved without you.', iW - 10);
   for (const l of lines) {
-    out.push(doubleRow(padCenter(`${A.chalk}${l}${A.reset}`, iW), iW));
+    out.push(doubleRow(padCenter(`${A.chalk}${A.dim}${l}${A.reset}`, iW), iW));
   }
+  out.push(doubleRow('', iW));
+
+  // Tagline
+  out.push(doubleRow(padCenter(`${A.smoke}─────────────────────${A.reset}`, iW), iW));
+  out.push(doubleRow(padCenter(`${A.smoke}${A.italic}"The block remembers."${A.reset}`, iW), iW));
   out.push(doubleRow('', iW));
   out.push(doubleBot(iW));
   return out.join('\n');
@@ -1044,3 +1223,57 @@ export function renderHelp() {
 
 // Re-export
 export { A, factionColor };
+
+// ══════════════════════════════════════════════════════════════════
+//  ACT PROGRESSION MAP (SLAY THE SPIRE STYLE)
+// ══════════════════════════════════════════════════════════════════
+
+export function renderActMap(romInfo, currentLevelId) {
+  const termW = getW();
+  const iW = termW - 2;
+  const out = [];
+
+  const actTitle = (romInfo.name || 'ACT 1').toUpperCase();
+  out.push(doubleTop(iW));
+  out.push(doubleRow(`  ${A.gold}${A.bold}◬ CAMPAIGN PROGRESSION : ${actTitle} ${A.reset}`, iW));
+  out.push(doubleMid(iW));
+
+  const levels = romInfo.levels || [];
+  // Bottom-up render, so reverse the levels list
+  const revLevels = [...levels].reverse();
+
+  let isFuture = true;
+  for (let i = 0; i < revLevels.length; i++) {
+    const lvl = revLevels[i];
+    const lvlId = typeof lvl === 'string' ? lvl : lvl.id;
+    const lvlName = typeof lvl === 'string' ? lvl : lvl.name || lvl.id;
+    const isCurrent = (lvlId === currentLevelId);
+    if (isCurrent) isFuture = false;
+    const isPast = !isCurrent && !isFuture;
+
+    const isBoss = i === 0;
+
+    let color = isPast ? A.slate : isCurrent ? A.green : A.chalk;
+    let icon = isBoss ? `${A.ember}☠${A.reset}` : isCurrent ? `${A.green}●${A.reset}` : isPast ? `${A.slate}○${A.reset}` : `${A.chalk}◇${A.reset}`;
+    
+    // Aesthetic spacing
+    let padding = '';
+    if (i % 4 === 1) padding = '  ';
+    if (i % 4 === 2) padding = '    ';
+    if (i % 4 === 3) padding = '  ';
+
+    if (isBoss) {
+      out.push(doubleRow(`        ${padding} { ${icon} ${color}${A.bold}BOSS${A.reset} }`, iW));
+    } else {
+      out.push(doubleRow(`          ${padding} [ ${icon} ${color}${lvlName}${A.reset} ]${isCurrent ? ` ${A.bold}${A.green}← YOU ARE HERE${A.reset}` : ''}`, iW));
+    }
+
+    if (i < revLevels.length - 1) {
+      out.push(doubleRow(`           ${padding}  ${color}│${A.reset}`, iW));
+    }
+  }
+
+  out.push(doubleRow('', iW));
+  out.push(doubleBot(iW));
+  return out.join('\n');
+}

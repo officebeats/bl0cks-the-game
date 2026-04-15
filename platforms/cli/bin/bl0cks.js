@@ -11,12 +11,13 @@
  *   - commands/play.js — Game loop, state display, scoring
  */
 
-import { existsSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { BL0CKS, PROVIDERS } from '../../../engine/index.js';
-import { A } from '../lib/renderer.js';
+import { A, renderActMap, applyTheme } from '../lib/renderer.js';
 import { ask, clear, closeRL } from '../lib/input.js';
+import { enterAltScreen, exitAltScreen } from '../lib/effects.js';
 import {
   loadConfig, loadSession,
   selectProvider, getApiKey,
@@ -74,6 +75,12 @@ async function main() {
     }
   }
 
+  // ── Enter alternate screen buffer (like vim) ──
+  const useAltScreen = !args.includes('--no-altscreen');
+  if (useAltScreen) {
+    enterAltScreen();
+  }
+
   // ── Boot splash ──
   await playSplash();
 
@@ -90,6 +97,15 @@ async function main() {
 
   const romInfo = engine.getROMInfo();
   const installedROMs = BL0CKS.scanROMs();
+
+  // ── Apply ROM theme colors ──
+  try {
+    const themePath = join(romPath, 'assets', 'theme.json');
+    if (existsSync(themePath)) {
+      const themeJson = JSON.parse(readFileSync(themePath, 'utf-8'));
+      applyTheme(themeJson);
+    }
+  } catch { /* theme loading is optional, fall through to defaults */ }
 
   // ── Main Menu Loop ──
   let provider;
@@ -160,7 +176,7 @@ async function main() {
     try {
       const state = engine.resumeSession(resumeSessionPayload);
       clear();
-      displayResponse(state, engine.getROMInfo());
+      await displayResponse(state, engine.getROMInfo());
       nextAction = await inputLoop(engine, levelId);
     } catch (err) {
       console.error(`\n  ${A.red}Failed to resume: ${err.message}${A.reset}`);
@@ -182,13 +198,13 @@ async function main() {
       levelId = levels[idx + 1].id;
       
       const ledger = engine.getLedger();
-      // Inform the player
+      // Inform the player via the Act Map
       clear();
-      console.log(`\n  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}`);
-      console.log(`  ${A.gold}${A.bold}Accessing Next Sequence: ${levels[idx+1].name}${A.reset}`);
-      console.log(`  ${A.gray}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${A.reset}\n`);
+      console.log(renderActMap(engine.getROMInfo(), levelId));
+      console.log(`\n  ${A.chalk}Press Enter to embark...${A.reset}`);
+      await ask('');
       
-      await new Promise(r => setTimeout(r, 1500));
+      clear();
       
       // Start the new level (the engine retains the ledger internally if passed, or we set it)
       engine.setLedger(ledger);
@@ -202,16 +218,20 @@ async function main() {
   }
 
   closeRL();
+  if (useAltScreen) exitAltScreen();
   import('../lib/audio.js').then(m => m.stopAudio());
   process.exit(0);
 }
 
-// Ensure audio is killed even if the player presses Ctrl+C
+// Ensure audio + alt screen are cleaned up even on Ctrl+C
 process.on('SIGINT', () => {
+  process.stdout.write('\x1b[?25h');   // show cursor
+  process.stdout.write('\x1b[?1049l'); // exit alt screen
   import('../lib/audio.js').then(m => m.stopAudio());
   process.exit();
 });
 process.on('exit', () => {
+  process.stdout.write('\x1b[?25h');   // show cursor (safety)
   import('../lib/audio.js').then(m => m.stopAudio());
 });
 
