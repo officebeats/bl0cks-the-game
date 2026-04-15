@@ -6,6 +6,18 @@ BL0CKS is the first strategy card game built natively on AI — powered by any m
 
 Every character has a **visible loyalty score** and a **hidden true motive** known only to the AI. Every decision costs clock ticks. Betrayals aren't random — they're earned outcomes of your own risk tolerance.
 
+```
+╭────────────────────────────────────────────────────────╮
+│  ░▒▓  ★  V I C T O R Y  ★  ▓▒░                       │
+│                    ♛                                   │
+│            ▄█████████▄                                 │
+│   "You held the block. The corner knows your name."    │
+│                                                        │
+│            ─────────────────────                       │
+│            "Territory. Trust. Time."                   │
+╰────────────────────────────────────────────────────────╯
+```
+
 ---
 
 ## 🎮 Quick Start
@@ -20,12 +32,50 @@ npm install
 
 # Play (requires AI API key)
 npm start
+
+# Optional: disable alternate screen buffer
+npm start -- --no-altscreen
 ```
 
 You'll be prompted to enter an API key from any supported provider:
 - **Gemini** (`AIza...`) — Recommended
 - **Claude** (`sk-ant-...`)
 - **OpenAI** (`sk-...`)
+- **Kilo** — Free shareware gateway (200 requests/day)
+
+---
+
+## 🖥️ Terminal Experience
+
+BL0CKS runs in an **immersive terminal UI** with a full ASCII art renderer:
+
+| Feature | Description |
+|---|---|
+| **Alternate Screen** | Game runs in its own screen buffer (like vim). `--no-altscreen` to disable. |
+| **Fanned Card Layout** | Cards displayed in a parabolic arc with overlap, drop shadows, and faction-colored borders |
+| **Paged Layout** | Dramatic **Whisper → Play** flow. Events and enemy intent shown on their own screen before your hand. |
+| **Contextual Narrator** | `THE BLOCK │ Feds circling. Keep it quiet.` — Prompt text reacts to heat, influence, clock, and threats. |
+| **Screen Reactions** | Red flash on betrayal, dim on territory loss, shake on gambit failure |
+| **Typewriter Text** | Narrative streams char-by-char for dramatic pacing |
+| **Gradient Text** | 24-bit color gradients on victory scores and dramatic moments |
+| **ROM Theming** | Custom color palettes loaded from `assets/theme.json` per ROM |
+| **720p Optimized** | Every screen verified to fit 80×24 terminal (tight 720p) |
+
+### Card Types — Visual Identity
+
+```
+╭── PEOPLE ──────╮  ╭── MOVES ──────╮  ╭── DEAD DRAW ──╮
+│ 1·DARIUS WEBB  │  │ 1·⚔ TAX      │  │ 1·🔥PARANOIA  │
+│   Broker       │  │   Collect     │  │   DEAD DRAW   │
+│   Governors    │  │   resources   │  │   Cannot be   │
+│   Woodlawn     │  │   from a      │  │   played.     │
+│   Loy: 7       │  │   controlled  │  │   Burn to     │
+│   ████████░░   │  │   block.      │  │   remove.     │
+│   ░░░░░░░░░░░  │  │   █████       │  │   BURN →      │
+╰────────────────╯  ╰───────────────╯  ╰───────────────╯
+ Blue border          Red border         Red background
+ Faction-colored      ⚔ + accent        🔥 + dim text
+```
 
 ---
 
@@ -45,6 +95,8 @@ bl0cks-the-game/
 │   │       ├── gemini.js      #     Google Gemini
 │   │       ├── claude.js      #     Anthropic Claude
 │   │       ├── openai.js      #     OpenAI GPT
+│   │       ├── kilo.js        #     Kilo free gateway
+│   │       ├── ollama.js      #     Local Ollama models
 │   │       └── mock.js        #     Deterministic testing
 │   ├── cards/                 # Card engine
 │   │   ├── types.js           #   Card type schemas & factories
@@ -75,8 +127,8 @@ bl0cks-the-game/
 ├── roms/                      # Game content packages
 │   ├── chicago/               # Base ROM: South Side Chicago
 │   │   ├── manifest.json      #   ROM metadata & structure
-│   │   ├── levels/            #   Level definition files
-│   │   ├── world/             #   Factions & territory definitions
+│   │   ├── levels/            #   Level definition files (12 levels)
+│   │   ├── world/             #   Factions, territory, lore, aesthetics
 │   │   ├── cards/             #   Card templates & custom cards
 │   │   ├── prompts/           #   AI prompt files
 │   │   └── assets/            #   Theme, audio, visual assets
@@ -84,8 +136,15 @@ bl0cks-the-game/
 │
 ├── platforms/                 # Platform shells
 │   ├── cli/                   # Terminal interface
-│   │   ├── bin/bl0cks.js      #   CLI entry point
-│   │   └── lib/renderer.js    #   Terminal renderer
+│   │   ├── bin/bl0cks.js      #   CLI entry point + alt screen buffer
+│   │   ├── commands/play.js   #   Game loop, paged layout, scoring
+│   │   └── lib/
+│   │       ├── renderer.js    #   Cell-buffer terminal renderer
+│   │       ├── effects.js     #   Typewriter, gradients, screen fx
+│   │       ├── input.js       #   Readline + raw mode input
+│   │       ├── menus.js       #   Config, sessions, provider select
+│   │       ├── splash.js      #   Animated boot splash + tutorial
+│   │       └── audio.js       #   Background audio playback
 │   └── web/                   # Web interface (planned)
 │
 ├── tools/                     # Developer tools
@@ -109,9 +168,10 @@ bl0cks-the-game/
 |---|---|
 | **10-Phase Turn** | Dawn → Draw → Street Whisper → Scheme → Act → Combo → Burn → Intent → Heat Check → Dusk |
 | **Influence** | Per-turn action budget (3 base, 6 max). Use it or lose it. |
-| **Cards** | People (hidden loyalty), Moves (7 types), Events, Status, Intel |
+| **Cards** | **Crew** (people with hidden loyalty), **Plays** (7 move types), **Dead Draws** (status cards that clog your hand) |
 | **Keywords** | Block ⛨ · Connect ◆ · Flip ☠ · Hustle 💰 · Fortify 🏰 · Shadow 👻 · Rally 📢 |
 | **Heat Meter** | Global escalation: Low → Warm → Hot → On Fire → Federal |
+| **Enemy Intent** | Slay the Spire-style — rivals telegraph their next move so you can counter |
 | **Gambits** | High-risk/reward 3rd option. Hidden stat checks. Irreversible. |
 | **The Stash** | Post-level asset picks. 12 permanent buffs that stack. |
 | **The Ledger** | Cross-level memory. Grudges, debts, reputation carry forward. |
@@ -138,6 +198,7 @@ Three pillars govern all design decisions:
 | Gemini Edition | `AIza...` | The Wire DLC, prismatic cards |
 | Claude Edition | `sk-ant-...` | Deception Arc, extended thinking |
 | GPT Edition | `sk-...` | Informant mechanic unlock |
+| Kilo Edition | Free | Shareware gateway, 200 requests/day |
 | Community Edition | Local/free | Community cards, open source |
 
 ---
@@ -152,6 +213,31 @@ ROMs are self-contained game content packages. Use the template:
 cp -r roms/_template roms/my-new-rom
 # Edit manifest.json, add levels, world, prompts, cards
 node tools/rom-validator.mjs roms/my-new-rom
+```
+
+### ROM Theme Colors
+
+Create `assets/theme.json` in your ROM to customize the terminal palette:
+
+```json
+{
+  "palette": {
+    "primary": "#3498DB",
+    "secondary": "#2C3E50",
+    "accent": "#E74C3C",
+    "surface": "#1A1A2E",
+    "text": "#F2F2F2",
+    "muted": "#888888"
+  },
+  "factions": {
+    "your_faction_1": "#3498DB",
+    "your_faction_2": "#E74C3C"
+  },
+  "ui": {
+    "card_bg": "#252542",
+    "card_shadow": "#0D0D0D"
+  }
+}
 ```
 
 ### Engine API
