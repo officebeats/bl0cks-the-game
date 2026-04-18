@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="#-quick-start">Quick Start</a> •
+  <a href="#-ai-agent-play">AI Agent Play</a> •
   <a href="#-how-it-works">How It Works</a> •
   <a href="#-screenshots">Screenshots</a> •
   <a href="#-create-your-own-game">Create Your Own</a> •
@@ -59,6 +60,29 @@ You'll be prompted to choose your AI provider and paste your API key:
 | **Kilo** | Free | Shareware gateway — 200 requests/day, no key needed |
 
 > 💡 **Your key is stored locally** in `~/.bl0cks/config.json` and never transmitted anywhere except directly to your chosen AI provider.
+
+---
+
+## 🤖 AI Agent Play
+
+BL0CKS ships with a **self-contained agentic skill** that lets an AI coding assistant (Gemini CLI, Claude Code, Cursor, etc.) play the game directly — no human terminal interaction required.
+
+```
+.agents/skills/play_bl0cks/SKILL.md
+```
+
+**Two modes:**
+
+| Mode | Description |
+|---|---|
+| **QA Tester** | The agent runs all 13 levels headlessly via the mock adapter and reports pass/fail. Great for regression testing. |
+| **Game Master** | The agent boots the engine with your API key, presents the board as rich narrative in chat, and translates your natural language into game actions. Play BL0CKS entirely from your AI chat window. |
+
+Just tell your agent:
+
+> *Run the Bl0cks Runner skill. Let's do a Game Master match on the Chicago ROM!*
+
+The skill uses the **engine API directly** (`BL0CKS.boot()` → `startLevel()` → `sendAction()`) rather than the CLI, so it works in any non-TTY environment.
 
 ---
 
@@ -218,6 +242,11 @@ node tools/rom-validator.mjs roms/my-cyberpunk-rom
 
 ```
 bl0cks-the-game/
+├── .agents/                   # AI agent skills & tooling
+│   └── skills/
+│       ├── play_bl0cks/       # Agentic game runner (QA Tester / Game Master)
+│       └── rom_audio_prompt/  # Lyria 3 music prompt generator
+│
 ├── engine/                    # Core game engine (content-agnostic)
 │   ├── index.js               # Public API: BL0CKS.boot()
 │   ├── ai/                    # AI provider routing & adapters
