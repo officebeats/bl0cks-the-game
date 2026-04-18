@@ -65,6 +65,8 @@ You'll be prompted to choose your AI provider and paste your API key:
 
 ## 🤖 AI Agent Play
 
+> **Inspired by:** [*"We need to talk about gstack"*](https://www.youtube.com/watch?v=Rzi7oFTzjac&t=2657s) by Theo (t3.gg) — at **44:17** he demonstrates how a self-contained markdown file can replace hundreds of lines of deterministic CLI code by instructing an AI agent to natively operate an application. BL0CKS is a **game-specific proof of concept** of that pattern — instead of building complex integration harnesses, we wrote a ~150-line markdown "skill" that teaches an agent how to boot the engine, parse game state, and play.
+
 BL0CKS ships with a **self-contained agentic skill** that lets an AI coding assistant (Gemini CLI, Claude Code, Cursor, etc.) play the game directly — no human terminal interaction required.
 
 ```
