@@ -580,27 +580,30 @@ function renderFannedHand(cards, innerWidth) {
   }
 
   // Final height check: The fan needs at least 8-10 rows to look "premium"
-  return createFanLines(cards, innerWidth, cW, cH, step, startX, arcOffsets, (buf) => {
-    for (let i = 0; i < n; i++) {
-      const cx = startX + i * step;
-      const cy = arcOffsets[i];
-      const card = cards[i];
-      const isLower = cy > 0;
-      const shadowToken = isLower ? BOX.dense : BOX.light;
+  const bufH = cH + maxArc + 1;
+  const buf = createBuf(innerWidth, bufH);
 
-      if (card.type === 'move') {
-        paintMoveCard(buf, cx, cy, card, i + 1);
-      } else if (card.type === 'status') {
-        paintStatusCard(buf, cx, cy, card, i + 1);
-      } else {
-        paintPeopleCard(buf, cx, cy, card, i + 1);
-      }
+  for (let i = 0; i < n; i++) {
+    const cx = startX + i * step;
+    const cy = arcOffsets[i];
+    const card = cards[i];
+    const isLower = cy > 0;
+    const shadowToken = isLower ? BOX.dense : BOX.light;
 
-      // Apply arc-aware shadow (v3.1)
-      for (let r = 1; r < cH; r++) bPut(buf, cx + cW, cy + r, shadowToken, A.shadow, A.bgDark);
-      for (let c = 1; c <= cW; c++) bPut(buf, cx + c, cy + cH, shadowToken, A.shadow, A.bgDark);
+    if (card.type === 'move') {
+      paintMoveCard(buf, cx, cy, card, i + 1);
+    } else if (card.type === 'status') {
+      paintStatusCard(buf, cx, cy, card, i + 1);
+    } else {
+      paintPeopleCard(buf, cx, cy, card, i + 1);
     }
-  });
+
+    // Apply arc-aware shadow (v3.1)
+    for (let r = 1; r < cH; r++) bPut(buf, cx + cW, cy + r, shadowToken, A.shadow, A.bgDark);
+    for (let c = 1; c <= cW; c++) bPut(buf, cx + c, cy + cH, shadowToken, A.shadow, A.bgDark);
+  }
+
+  return bufToLines(buf, A.bgDark);
 }
 
 /**
@@ -937,7 +940,6 @@ export function renderBoard(state, options = {}) {
         const pfx = i === 0 ? `${A.smoke}${BOX.medium} ` : '    ';
         out.push(doubleRow(`  ${pfx}${A.crimson}${intentLines[i]}${A.reset}`, iW));
       }
-    }
       out.push(innerDivider(iW));
     }
   }
@@ -1001,7 +1003,22 @@ export function renderBoard(state, options = {}) {
   }
 
   out.push(doubleBot(iW));
-  return out.join('\n');
+
+  let finalOutput = out.join('\n');
+
+  // --- Visual Intensity Effects (v4.5) ---
+  const shakeX = options.shakeX || 0;
+  if (shakeX !== 0) {
+    const space = ' '.repeat(Math.abs(shakeX));
+    finalOutput = finalOutput.split('\n').map(l => (shakeX > 0 ? space + l : l + space)).join('\n');
+  }
+
+  const flash = options.flash || false;
+  if (flash) {
+    finalOutput = `\x1b[7m${finalOutput}\x1b[27m`;
+  }
+
+  return finalOutput;
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -1316,70 +1333,4 @@ export function renderHelp() {
 // Re-export
 export { A, factionColor };
 
-// ══════════════════════════════════════════════════════════════════
-//  ACT PROGRESSION MAP (SLAY THE SPIRE STYLE)
-// ══════════════════════════════════════════════════════════════════
-
-export function renderActMap(romInfo, currentLevelId) {
-  const termW = getW();
-  const iW = termW - 2;
-  const out = [];
-
-  const actTitle = (romInfo.name || 'ACT 1').toUpperCase();
-  out.push(doubleTop(iW));
-  out.push(doubleRow(`  ${A.gold}${A.bold}◬ CAMPAIGN PROGRESSION : ${actTitle} ${A.reset}`, iW));
-  out.push(doubleMid(iW));
-
-  const levels = romInfo.levels || [];
-  // Bottom-up render, so reverse the levels list
-  const revLevels = [...levels].reverse();
-
-  let isFuture = true;
-  for (let i = 0; i < revLevels.length; i++) {
-    const lvl = revLevels[i];
-    const lvlId = typeof lvl === 'string' ? lvl : lvl.id;
-    const lvlName = typeof lvl === 'string' ? lvl : lvl.name || lvl.id;
-    const isCurrent = (lvlId === currentLevelId);
-    if (isCurrent) isFuture = false;
-    const isPast = !isCurrent && !isFuture;
-
-    const isBoss = i === 0;
-
-    let color = isPast ? A.slate : isCurrent ? A.green : A.chalk;
-    let icon = isBoss ? `${A.ember}☠${A.reset}` : isCurrent ? `${A.green}●${A.reset}` : isPast ? `${A.slate}○${A.reset}` : `${A.chalk}◇${A.reset}`;
-    
-    // Aesthetic spacing
-    let padding = '';
-    if (i % 4 === 1) padding = '  ';
-    if (i % 4 === 2) padding = '    ';
-    if (i % 4 === 3) padding = '  ';
-
-    if (isBoss) {
-      out.push(doubleRow(`        ${padding} { ${icon} ${color}${A.bold}BOSS${A.reset} }`, iW));
-    } else {
-      out.push(doubleRow(`          ${padding} [ ${icon} ${color}${lvlName}${A.reset} ]${isCurrent ? ` ${A.bold}${A.green}← YOU ARE HERE${A.reset}` : ''}`, iW));
-    }
-
-    if (i < revLevels.length - 1) {
-      out.push(doubleRow(`           ${padding}  ${color}│${A.reset}`, iW));
-    }
-  }
-
-  out.push(doubleRow('', iW));
-  out.push(doubleBot(iW));
-  let result = out.join('\n');
-
-  // Apply shake offset (v4.0 intensity)
-  if (shakeX !== 0) {
-    const space = ' '.repeat(Math.abs(shakeX));
-    result = result.split('\n').map(line => space + line).join('\n');
-  }
-
-  // Apply full-screen flash (v4.0 intensity)
-  if (flash) {
-    result = `\x1b[7m${result}\x1b[27m`;
-  }
-
-  return result;
-
-}
+// End of file cleanup (v4.5)
