@@ -21,7 +21,7 @@ import { buildSystemPrompt } from '../ai/prompt-builder.js';
 import { createState, updateState, exportState } from './state.js';
 import { PHASES, TurnPhaseRunner } from './phases.js';
 import { resetInfluence, calculateBaseInfluence } from './influence.js';
-import { increaseHeat, decreaseHeat, heatCheckPhase, getHeatThreshold, getActiveModifiers } from './heat.js';
+import { increaseHeat, decreaseHeat, heatCheckPhase, getHeatThreshold, getActiveModifiers, HEAT_CAP } from './heat.js';
 import { createLedger, recordLevelComplete, serializeLedger, getLoyaltyModifier, addGrudge, addDebt, addBurnedBridge, updateReputation, addGhostTerritory, incrementBodyCount, recordAlliance, addAsset } from './ledger.js';
 import { detectCombos, applyCombos } from '../cards/keywords.js';
 import { calculateLevelScore } from './scoring.js';
@@ -118,7 +118,7 @@ export class GameController {
 
     const heatThreshold = getHeatThreshold(heatCarried);
     const heatContext = heatCarried > 0
-      ? `\n\n## Heat Status\nCurrent Heat: ${heatCarried}/20 — "${heatThreshold.name}"\n${heatThreshold.flavor}\n${heatThreshold.modifier ? 'Active modifiers: ' + JSON.stringify(heatThreshold.modifier) : ''}`
+      ? `\n\n## Heat Status\nCurrent Heat: ${heatCarried}/${HEAT_CAP} — "${heatThreshold.name}"\n${heatThreshold.flavor}\n${heatThreshold.modifier ? 'Active modifiers: ' + JSON.stringify(heatThreshold.modifier) : ''}`
       : '';
 
     const systemPrompt = buildSystemPrompt(this.#rom, {
@@ -343,7 +343,8 @@ export class GameController {
     // Update engine state
     this.#engineState = updateState(eState, {
       rivalIntent: nextIntent,
-      heat: Math.min(nextHeat, 20)
+      // Refactor: Use central constant instead of hardcoded 20 (v4.0 fix)
+      heat: Math.min(nextHeat, HEAT_CAP)
     });
 
     // Emit for UI feedback

@@ -186,7 +186,7 @@ export async function inputLoop(engine, levelId) {
   let stopInput;
   let vibeFrame = 0;
 
-  return new Promise((resolve) => {
+  const result = await new Promise((resolve) => {
     const romInfo = engine.getROMInfo();
 
     // ── THE HEARTBEAT (5 FPS) ──
@@ -248,6 +248,12 @@ export async function inputLoop(engine, levelId) {
         try {
           const nextState = await engine.sendAction(action);
           currentState = nextState;
+          
+          // PERSISTENCE FIX: Save session after each resolved action (v4.0 fix)
+          if (saveSession) {
+            saveSession(engine.exportSession());
+          }
+          
           isThinking = false;
 
           if (nextState.outcome) {
@@ -276,9 +282,9 @@ export async function inputLoop(engine, levelId) {
       clear();
     };
   });
-}
 
+  // CLEANUP FIX: Ensure engine is destroyed and result is returned correctly (v4.0 fix)
   engine.destroy();
-  return { action: 'quit' };
+  return result;
 }
 

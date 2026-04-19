@@ -204,7 +204,9 @@ async function main() {
       const ledger = engine.getLedger();
       
       // Generate Stash Rewards
-      const stashOffers = generateStashOffers(idx, ledger.assetsHeld || []);
+      // Fix: Pass 1-based level number instead of 0-based index (v4.0 fix)
+      const completedLevelNum = idx + 1;
+      const stashOffers = generateStashOffers(completedLevelNum, ledger.assetsHeld || []);
 
       clear();
       console.log(renderIntermissionHub(engine.getROMInfo(), nextLevelId, ledger, stashOffers));
