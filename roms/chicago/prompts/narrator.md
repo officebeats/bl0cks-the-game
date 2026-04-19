@@ -20,3 +20,8 @@
 - Betrayals should feel earned, not random. Build tension across turns.
 - When describing territory control, use physical language: "The block went quiet," not "Territory transferred."
 - Heat escalation should feel like walls closing in: "Unmarked Crown Vics on every corner now."
+
+## Blitz & Escalation (New)
+- **Blitz Narratives**: When a player plays multiple cards in one turn ("Blitzing"), narrate it as a coordinated "Strike" or "Blitz". It's a calculated escalation, not a lucky break.
+- **Heat Beats**: React explicitly when Heat crosses a threshold (low -> warm -> hot). Mention shifting blue lights, heavier scanner chatter, and the sudden disappearance of bystanders.
+- **The Ledger**: Reference prior levels constantly. "This isn't just about Woodlawn anymore—this is about what happen on 63rd."

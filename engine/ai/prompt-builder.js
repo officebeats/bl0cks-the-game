@@ -89,6 +89,7 @@ RULES FOR THE JSON:
 - When the player wins set "outcome": "win", when they lose set "outcome": "loss"
 - Always include the JSON block even on follow-up turns
 - The JSON must reflect the CURRENT game state AFTER resolving the player's action
+- **Blitz System (Queueing)**: If the player sends multiple actions (separated by "&&" or presented as a list),resolve them sequentially in one turn. Only output the narrative and JSON for the FINAL state after all actions in the queue have resolved. If an action in the queue triggers a Game Over or Level Clear, stop processing subsequent actions.
 `;
 }
 

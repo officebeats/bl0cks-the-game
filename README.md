@@ -6,7 +6,8 @@
 
 <p align="center">
   <strong>Territory. Trust. Time.</strong><br>
-  <em>The first strategy card game powered entirely by AI — built with markdown, played in your terminal.</em>
+  <em>The first strategy card game powered entirely by AI — built with markdown, played in your terminal.</em><br>
+  <img src="https://img.shields.io/badge/Designed%20with-Claude%20Code%20Game%20Studios-6B4EFE?style=for-the-badge&logo=claude" alt="Designed with Claude Code Game Studios">
 </p>
 
 <p align="center">

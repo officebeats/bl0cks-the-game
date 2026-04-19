@@ -16,6 +16,8 @@ import { join, dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 import { BL0CKS, PROVIDERS } from '../../../engine/index.js';
 import { A, renderActMap, applyTheme } from '../lib/renderer.js';
+import { renderIntermissionHub } from '../lib/map-renderer.js';
+import { generateStashOffers } from '../../../engine/cards/stash.js';
 import { ask, clear, closeRL } from '../lib/input.js';
 import { enterAltScreen, exitAltScreen } from '../lib/effects.js';
 import {
@@ -195,20 +197,36 @@ async function main() {
     const idx = levels.findIndex(l => l.id === nextAction.currentLevel);
     
     if (idx !== -1 && idx < levels.length - 1) {
-      levelId = levels[idx + 1].id;
+      // --- Intermission Hub (The Fun Upgrade) ---
+      const nextLevelIdx = idx + 1;
+      const nextLevelId = levels[nextLevelIdx].id;
       
       const ledger = engine.getLedger();
-      // Inform the player via the Act Map
+      
+      // Generate Stash Rewards
+      const stashOffers = generateStashOffers(idx, ledger.assetsHeld || []);
+
       clear();
-      console.log(renderActMap(engine.getROMInfo(), levelId));
-      console.log(`\n  ${A.chalk}Press Enter to embark...${A.reset}`);
-      await ask('');
+      console.log(renderIntermissionHub(engine.getROMInfo(), nextLevelId, ledger, stashOffers));
+      
+      if (stashOffers.length > 0) {
+        const choice = await ask(`\n  ${A.gold}Select your Asset (1, 2, 3) or Enter to skip: ${A.reset}`);
+        const pickIdx = parseInt(choice) - 1;
+        if (!isNaN(pickIdx) && stashOffers[pickIdx]) {
+          ledger.assetsHeld = [...(ledger.assetsHeld || []), stashOffers[pickIdx].id];
+          engine.setLedger(ledger);
+          console.log(`\n  ${A.green}✓ ${stashOffers[pickIdx].name} added to your stash.${A.reset}`);
+          await sleep(1000);
+        }
+      }
+
+      console.log(`\n  ${A.chalk}Embarking on: ${A.reset}${levels[nextLevelIdx].name}...`);
+      await sleep(1500);
       
       clear();
       
-      // Start the new level (the engine retains the ledger internally if passed, or we set it)
-      engine.setLedger(ledger);
-      nextAction = await gameLoop(engine, levelId, romPath);
+      // Start the new level
+      nextAction = await gameLoop(engine, nextLevelId, romPath);
     } else {
       clear();
       console.log(`\n  ${A.gold}☆ CAMPAIGN COMPLETE ☆${A.reset}`);

@@ -1,57 +1,48 @@
-# BL0CKS Level File: 1 - The Corner
+# BL0CKS Level ROM: 01 - The Corner
 
-**Instructions for Game Engine:** This file is the starting ROM for the game. Load these rules immediately. The opening Event must be the "POWER VACUUM" narrative block provided below. 
+**⚡ ENGINE DIRECTIVE:** This is the entry-point ROM. Load logic immediately. Opening narration must trigger `EVENT: POWER_VACUUM_63RD` on first tick.
 
-## 1. Level Parameters
-- **Act:** I
-- **Level ID:** 01
-- **Level Name:** The Corner
+---
+
+## 1. Parameters
+- **Act:** I (The Corner)
+- **ID:** 01
 - **Clock:** 12 Ticks
-- **Starting Intel tokens:** 2
+- **Intel:** 2 Tokens
+- **Ambient Tone:** Rainfall, distant sirens, low-pass filter on lo-fi tracks.
 
-## 2. Initial Territory State
-- **Woodlawn:** YOU (Governors)
-- **Englewood:** RIVAL (Lords)
-- **Auburn Gresham:** CONTESTED
-- **Chatham:** CONTESTED
-- **Hyde Park:** NEUTRAL
-- **Roseland:** RIVAL (Stones)
+## 2. Global State
+- **Woodlawn**: YOU (Governors — Legacy Hold)
+- **Englewood**: RIVAL (Lords — Fortified)
+- **Auburn Gresham**: CONTESTED (The Prize)
+- **Chatham**: CONTESTED (High Paranoia)
+- **Roseland**: RIVAL (Stones — Silk Hand)
 
-## 3. Win / Loss Conditions
-- **Win Condition 1 (Aggressive):** You take control of Auburn Gresham before the Clock reaches 12.
-- **Win Condition 2 (Defensive):** You survive all 12 Clock ticks while maintaining control of Woodlawn.
-- **Loss Condition:** You lose Woodlawn to a Rival or a CPD lockdown.
+## 3. Victory Conditions
+| Condition | Trigger | Reward |
+|-----------|---------|--------|
+| **Dominance** | Control Auburn Gresham before Tick 12 | Unlock: *Corner Armory* Asset |
+| **Survival** | Maintain Woodlawn for 12 Ticks | Proceed to Level 02 |
+| **LOSS** | Lose Woodlawn or Heat hits 20 | Run Terminated |
 
-## 4. Starting Hand (Hardcoded Characters)
-*Engine Directive: Inject these exactly as written for the player's starting hand. Note their true motives and track their hidden loyalties silently based on the player's choices.*
+## 4. Starting Hand
+1. **Darius Webb** (Broker)
+   - *Visible:* Loyalty 8/10. *Hidden:* 5/10.
+   - *Motive:* "The survivor. He smells the rain before it falls. If the Lords hit Woodlawn, he’s gone before the first shot."
+2. **Marcus "Cole" Coleman** (Enforcer)
+   - *Visible:* Loyalty 5/10. *Hidden:* 8/10.
+   - *Motive:* "The loyalist. He’d burn the city to keep your corner warm, but his paranoia about Darius is a mounting liability."
+3. **Tanya Rivers** (Informant)
+   - *Visible:* Loyalty 7/10. *Hidden:* 6/10.
+   - *Motive:* "The ghost. Skimming the tax-pot to build a life elsewhere. She's effective as long as the money flows."
+4. **Starter Moves**: `TAX`, `WAR`, `GHOST`.
 
-1. **Darius Webb**
-   - **Role:** Broker
-   - **Visible Loyalty:** 8/10
-   - **Hidden Loyalty:** 5/10
-   - **True Motive:** "Survival. He is terrified of the Lords and will secretly sell you out if they attack Woodlawn."
-   - **Betrayal Threshold:** 3
+---
 
-2. **Marcus "Cole" Coleman**
-   - **Role:** Enforcer
-   - **Visible Loyalty:** 5/10
-   - **Hidden Loyalty:** 8/10
-   - **True Motive:** "Genuine, unshakeable loyalty to you. But he is deeply, violently paranoid that Darius is a rat."
-   - **Betrayal Threshold:** 2
-
-3. **Tanya Rivers**
-   - **Role:** Informant
-   - **Visible Loyalty:** 7/10
-   - **Hidden Loyalty:** 6/10
-   - **True Motive:** "Skimming your tax collections to buy her little brother's way out of the city before it's too late."
-   - **Betrayal Threshold:** 4
-
-4. **Move Cards:** Always stock the player hand with `TAX` and `WAR`.
-
-## 5. Opening Turn Narration
-**Use this exactly as the first Event block when you boot up the level:**
-
-**⚡ EVENT: POWER VACUUM**
-"The Governors just lost their top lieutenant on 63rd & King. Nobody knows who gave the order, but the Lords over in Englewood are moving fast to claim the power vacuum in Auburn Gresham. 
-
-The brass just handed you this corner. Hold Woodlawn. Take Auburn Gresham if you can. Trust no one."
+## 5. Scripted Opening
+**⚡ EVENT: POWER_VACUUM_63RD**
+> "The rain is washing the blood off 63rd and King, but it can’t wash away the sound of the silence. Your top lieutenant is in a bag, and the Governors’ old guard is panicking in the back of the diner.
+> 
+> The Lords in Englewood are already smelling the vacuum. Auburn Gresham is wide open, and the brass just handed you the keys to the corner.
+> 
+> Woodlawn is yours. For now. Don't let the weather fool you—it's about to get very hot."

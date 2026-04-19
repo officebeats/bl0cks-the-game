@@ -169,14 +169,9 @@ function parseTextFormat(text) {
   }
 
   if (state.territories.length === 0) {
-    state.territories = [
-      { name: 'Woodlawn', control: 'you', faction: 'Governors', intersection: '63rd & King' },
-      { name: 'Englewood', control: 'rival', faction: 'Lords', intersection: '69th & Halsted' },
-      { name: 'Auburn Gresham', control: 'contested', faction: '', intersection: '79th & Halsted' },
-      { name: 'Chatham', control: 'contested', faction: '', intersection: '79th & Cottage' },
-      { name: 'Hyde Park', control: 'neutral', faction: '', intersection: '53rd & Harper' },
-      { name: 'Roseland', control: 'rival', faction: 'Stones', intersection: '111th & State' },
-    ];
+    // Release Audit: Removed hardcoded Chicago defaults to maintain content-agnostic engine.
+    // Territory state should come from the LLM or initial ROM load.
+    state.territories = [];
   }
 
   const scannerMatch = text.match(/(?:STREET WHISPER|POLICE SCANNER|📻)[:\s]*"?(.+?)"?\s*(?:\n|$)/i);

@@ -1,0 +1,66 @@
+# Game Balance Configuration
+# Adjust these values to tune gameplay feel
+
+# Resource System
+resources:
+  influence:
+    base_per_turn: 3      # Starting influence each turn
+    max_per_turn: 6       # Maximum influence cap
+    carry_over: false     # Unspent influence carries to next turn
+    generation:
+      tax_bonus: 1
+      burn_status: 1
+      
+  heat:
+    start: 0              # Starting heat
+    max: 20              # Maximum heat before penalty
+    gain_per_turn: 1     # Automatic heat gain
+    gain_per_war: 1       # Heat from War card
+    gain_per_loss: 1      # Heat from losing territory
+    loss_per_peace: -1    # Heat reduction from Peace
+    loss_per_ghost: -1    # Heat reduction from Ghost
+    
+# Card System
+cards:
+  hand_size: 5           # Cards drawn each turn
+  max_hand_size: 7        # Maximum hand size
+  status_limit: 2        # Status cards before blocked
+  draw_per_turn: 5       # Cards drawn from deck
+  discard_at_limit: true  # Discard excess cards
+  
+# Combat System
+combat:
+  block_duration: "end_of_turn"
+  loyalty_visible_default: 7
+  betrayal_threshold: 3   # Difference for flip trigger
+  territory_control_threshold: 2  # Cards to control
+  damage_from_loyalty: true  # Loyalty = damage
+  
+# Turn Structure
+turn:
+  phases:
+    - dawn
+    - draw
+    - street_whisper
+    - scheme
+    - act
+    - combo
+    - burn
+    - intent_resolves
+    - heat_check
+    - dusk
+    
+# Difficulty Scaling
+difficulty:
+  enemy_loyalty_mult: 1.0
+  heat_gain_mult: 1.0
+  clock_speed_mult: 1.0
+  
+# v4.0 Features
+features:
+  companions_enabled: true
+  quests_enabled: true
+  forging_enabled: true
+  enchantments_enabled: true
+  dynamic_intent_enabled: true
+  multi_phase_bosses: false

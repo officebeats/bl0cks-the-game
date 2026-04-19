@@ -1,0 +1,120 @@
+# Dynamic Enemy Intent Configuration (v4.0)
+# Enemy intents react to player board state
+
+dynamic_intent:
+  enabled: true
+  
+# Base Intent Weights
+base_weights:
+  attack: 0.40      # 40% chance of attack intent
+  buff: 0.25        # 25% chance of buff intent
+  debuff: 0.20      # 20% chance of debuff intent
+  defend: 0.10      # 10% chance of defend intent
+  special: 0.05    # 5% chance of special ability
+
+# Player State Modifiers
+# When conditions are met, intent weights shift
+modifiers:
+  # High Block - enemies less likely to attack
+  player_block_high:
+    condition: "player_total_block > 50"
+    shift:
+      attack: -0.20    # 20% less likely to attack
+      buff: +0.10      # More likely to buff
+      debuff: +0.10    # More likely to debuff
+      
+  # Low Territory Count - enemies defensive
+  player_territories_low:
+    condition: "controlled_territories < 2"
+    shift:
+      attack: -0.15
+      defend: +0.15
+      
+  # High Heat - enemies aggressive
+  heat_high:
+    condition: "heat > 14"
+    shift:
+      attack: +0.15
+      debuff: +0.10
+      buff: -0.10
+      
+  # Multiple Intel Used - enemies secretive
+  intel_used_high:
+    condition: "intel_cards_played > 3"
+    shift:
+      special: +0.10
+      attack: -0.10
+      
+  # Low Player Resources - enemies capitalize
+  player_influence_low:
+    condition: "available_influence < 2"
+    shift:
+      attack: +0.20
+      buff: -0.10
+      
+  # Player Has Companion - enemies target companion
+  companion_present:
+    condition: "companion_active = true"
+    shift:
+      attack_companion: +0.15
+      attack_player: -0.10
+      
+  # Boss Fights - enemies more dangerous
+  boss_encounter:
+    condition: "encounter_type = boss"
+    shift:
+      attack: +0.20
+      special: +0.10
+      defend: -0.15
+
+# Faction-Specific Adjustments
+faction_modifiers:
+  aggressive:
+    attack: +0.15
+    defend: -0.10
+    
+  defensive:
+    attack: -0.10
+    defend: +0.15
+    
+  political:
+    buff: +0.15
+    special: +0.10
+    
+  stealth:
+    special: +0.20
+    attack: -0.10
+
+# Intent Visibility
+# How much the player sees about enemy intents
+visibility:
+  default: "full"           # full, partial, hidden
+  partial_reveal: 0.5      # Only 50% of intents shown
+  
+  # Boss phase effects
+  boss_phase_1:
+    visibility: "full"
+  boss_phase_2:
+    visibility: "partial"
+  boss_phase_3:
+    visibility: "hidden"
+    
+# Special Ability Triggers
+special_triggers:
+  # Spawn reinforcement when losing
+  spawn_on_loss:
+    chance: 0.25
+    condition: "enemy_territory_lost"
+    spawn: "enforcer_1"
+    
+  # Buff allies when player buffs
+  counter_buff:
+    chance: 0.30
+    condition: "player_buff_applied"
+    effect: "buff_random_enemy"
+    
+  # Apply affliction when player has high loyalty
+  exploit_loyalty:
+    chance: 0.20
+    condition: "player_card_loyalty > 7"
+    effect: "apply_affliction"
