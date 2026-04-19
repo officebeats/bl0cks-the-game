@@ -188,6 +188,9 @@ export async function inputLoop(engine, levelId) {
 
   const result = await new Promise((resolve) => {
     const romInfo = engine.getROMInfo();
+    
+    // FLICKER FIX: Hide cursor during the real-time loop (v4.0 fix)
+    process.stdout.write('\x1b[?25l');
 
     // ── THE HEARTBEAT (5 FPS) ──
     ticker = setInterval(() => {
@@ -214,16 +217,18 @@ export async function inputLoop(engine, levelId) {
 
       if (vibeFrame > 0) vibeFrame--;
 
-      // 4. Render
-      process.stdout.write('\x1b[H'); // Jump to top
-      console.log(renderBoard(currentState, options));
+      // 4. Single-Buffer Rendering (v4.0 Flicker Fix)
+      // Accumulate everything into one string to prevent "strobe" effect
+      let frameContent = renderBoard(currentState, options);
       
       if (isThinking) {
-        process.stdout.write(`\n  ${A.dim}⠋ The block is processing...${A.reset}`);
+        frameContent += `\n  ${A.dim}⠋ The block is processing...${A.reset}`;
       } else {
         const narratorText = getPromptNarrator(currentState, engState);
-        process.stdout.write(`\n  ${A.smoke}THE BLOCK${A.reset} ${A.dim}│${A.reset} ${A.chalk}${narratorText}${A.reset}\n  ${A.gold}▸${A.reset} `);
+        frameContent += `\n  ${A.smoke}THE BLOCK${A.reset} ${A.dim}│${A.reset} ${A.chalk}${narratorText}${A.reset}\n  ${A.gold}▸${A.reset} `;
       }
+
+      process.stdout.write('\x1b[H' + frameContent);
     }, 200);
 
     // ── THE INPUT HANDLER (Instant Keypress) ──
@@ -277,6 +282,8 @@ export async function inputLoop(engine, levelId) {
     });
 
     const cleanup = () => {
+      // FLICKER FIX: Show cursor on exit
+      process.stdout.write('\x1b[?25h');
       clearInterval(ticker);
       stopInput();
       clear();

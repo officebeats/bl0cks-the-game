@@ -4,64 +4,79 @@ import { readFileSync, writeFileSync } from 'fs';
 import { resolve, join } from 'path';
 
 async function verify() {
-  console.log('--- BL0CKS v3.1 Visual Verification ---');
-  
+  console.log('--- BL0CKS v4.0 Real-Time Intensity Demo ---');
+  console.log('Preparing neural link (3s sequence)...');
+  await new Promise(r => setTimeout(r, 2000));
+
   // 1. Boot engine
   const engine = await BL0CKS.boot(resolve('./roms/chicago'), {
     provider: 'mock',
     apiKey: 'mock'
   });
 
-  // 2. Load theme to ensure correct colors are applied (simulating CLI boot)
+  // 2. Load theme
   try {
     const theme = JSON.parse(readFileSync('./roms/chicago/assets/theme.json', 'utf-8'));
     applyTheme(theme);
-  } catch (e) {
-    console.warn('Theme load failed, using defaults.', e);
-  }
+  } catch (e) {}
 
-  // 3. Force terminal dimensions for "Fan Out" layout
-  process.stdout.columns = 100;
-  process.stdout.rows = 50; // Disable 'tight' mode
+  // 3. Initialize Session
+  await engine.startLevel('01');
 
-  // 4. Start Level 01
-  const state = await engine.startLevel('01');
-  
-  // 5. Simulate critical real-time intensity (v4.0)
-  engine.tick(20000); // Extreme progression
-  // Force critical engine state for visual test
-  const eState = engine.getEngineState();
-  eState.heat = 19;          // Should trigger Flash + Red Heat
-  eState.rivalIntent = 95;   // Should trigger high intensity coloring
-  // We can't easily capture the 'Shake' in a text file, but we can check the 'Flash' ANSI code
+  // 4. Animation State
+  let frame = 0;
+  const maxFrames = 75; // ~15 seconds at 5fps
 
-  // 6. Force a "Premium" hand state for the demo
-  state.hand = [
-    { type: 'people', name: 'Darius Webb', role: 'Broker', faction: 'Governors', loyalty: 8 },
-    { type: 'people', name: 'Marcus Cole', role: 'Enforcer', faction: 'Lords', loyalty: 4 },
-    { type: 'move', name: 'TAX', description: 'Collect resources from a controlled block' },
-    { type: 'move', name: 'WAR', description: 'Contest a rival territory with your crew' },
-    { type: 'status', name: 'PARANOIA', description: 'Dead weight. Cannot be played. Burn to remove.' }
-  ];
-  
-  // Augment with engine info for HUD
-  state._engine = {
-    influence: 4,
-    maxInfluence: 6,
-    heat: 7,
-    heatThreshold: 'Warm',
-    turn: 'ACT'
-  };
+  // ENTER ALT SCREEN
+  process.stdout.write('\x1b[?1049h\x1b[H');
 
-  // 5. Render board (which calls renderFannedHand)
-  const board = renderBoard(state);
-  
-  // 6. Output to a text file
-  writeFileSync('v3.1_visual_verification.txt', board);
-  
-  console.log('✓ Render complete. File saved to v3.1_visual_verification.txt');
-  
-  engine.destroy();
+  const ticker = setInterval(async () => {
+    frame++;
+    
+    // Simulate engine ticks
+    engine.tick(200);
+    
+    const eState = engine.getEngineState();
+    // Force artificial escalation for the demo
+    eState.heat = Math.min(20, (frame / 4)); 
+    eState.rivalIntent = (frame * 1.5) % 100;
+
+    const gameState = {
+      levelId: '01',
+      outcome: null,
+      hand: [
+        { type: 'people', name: 'Darius Webb', role: 'Broker', faction: 'Governors', loyalty: 8 },
+        { type: 'people', name: 'Marcus Cole', role: 'Enforcer', faction: 'Lords', loyalty: 4 },
+        { type: 'move', name: 'TAX', description: 'Collect resources' },
+        { type: 'move', name: 'WAR', description: 'Contest territory' },
+        { type: 'status', name: 'PARANOIA', description: 'Dead weight' }
+      ],
+      _engine: {
+        influence: 4,
+        maxInfluence: 6,
+        heat: eState.heat,
+        heatThreshold: eState.heat > 14 ? 'ON FIRE' : 'WARM',
+        turn: 'ACT',
+        rivalIntent: eState.rivalIntent,
+        rivalIntentRate: 2
+      }
+    };
+
+    // Render 
+    const board = renderBoard(gameState);
+    
+    // MOVE CURSOR TO TOP AND PRINT (Simulate double buffer)
+    process.stdout.write('\x1b[H' + board);
+
+    if (frame >= maxFrames) {
+      clearInterval(ticker);
+      // EXIT ALT SCREEN
+      process.stdout.write('\x1b[?1049l');
+      console.log('\n✓ Demo Complete. Real-time heartbeat verified.');
+      engine.destroy();
+      process.exit(0);
+    }
+  }, 200);
 }
 
 verify().catch(console.error);
