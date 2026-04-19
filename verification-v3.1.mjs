@@ -44,6 +44,14 @@ async function verify() {
     const gameState = {
       levelId: '01',
       outcome: null,
+      territories: [
+        { name: 'Woodlawn', owner: 'YOU', contested: false },
+        { name: 'Englewood', owner: 'RIVAL_LORDS', contested: false },
+        { name: 'Chatham', owner: 'NEUTRAL', contested: (frame > 20 && frame % 10 < 5) },
+        { name: 'Auburn Gresham', owner: (frame > 40 ? 'YOU' : 'NEUTRAL'), contested: false },
+        { name: 'Roseland', owner: 'RIVAL_STONES', contested: false },
+        { name: 'Hyde Park', owner: 'NEUTRAL', contested: false }
+      ],
       hand: [
         { type: 'people', name: 'Darius Webb', role: 'Broker', faction: 'Governors', loyalty: 8 },
         { type: 'people', name: 'Marcus Cole', role: 'Enforcer', faction: 'Lords', loyalty: 4 },

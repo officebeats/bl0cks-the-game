@@ -144,6 +144,19 @@ export class GameController {
     const aiResponse = await this.#adapter.start(systemPrompt, level.content);
     const state = parseResponse(aiResponse);
 
+    // SEED INITIAL TERRITORIES (v4.5 Visual Update)
+    // If the AI didn't return a full map, initialize the standard 6 neighborhoods
+    if (!state.territories || state.territories.length === 0) {
+      state.territories = [
+        { name: 'Woodlawn', owner: 'YOU', contested: false },
+        { name: 'Englewood', owner: 'RIVAL_LORDS', contested: false },
+        { name: 'Chatham', owner: 'NEUTRAL', contested: false },
+        { name: 'Auburn Gresham', owner: 'NEUTRAL', contested: true },
+        { name: 'Roseland', owner: 'RIVAL_STONES', contested: false },
+        { name: 'Hyde Park', owner: 'NEUTRAL', contested: false }
+      ];
+    }
+
     // Augment AI state with engine-tracked fields
     state._romInfo = this.#buildLevelROMInfo();
     state._engine = {

@@ -574,35 +574,88 @@ function renderFannedHand(cards, innerWidth) {
   let maxArc = 0;
   for (let i = 0; i < n; i++) {
     const dist = center > 0 ? Math.abs(i - center) / center : 0;
-    const arc = Math.round(dist * dist * 2);
+  const arc = Math.round(dist * dist * 2);
     arcOffsets.push(arc);
     if (arc > maxArc) maxArc = arc;
   }
 
-  const bufH = cH + maxArc + 1;
-  const buf = createBuf(innerWidth, bufH);
+  // Final height check: The fan needs at least 8-10 rows to look "premium"
+  return createFanLines(cards, innerWidth, cW, cH, step, startX, arcOffsets, (buf) => {
+    for (let i = 0; i < n; i++) {
+      const cx = startX + i * step;
+      const cy = arcOffsets[i];
+      const card = cards[i];
+      const isLower = cy > 0;
+      const shadowToken = isLower ? BOX.dense : BOX.light;
 
-  for (let i = 0; i < n; i++) {
-    const cx = startX + i * step;
-    const cy = arcOffsets[i];
-    const card = cards[i];
-    const isLower = cy > 0;
-    const shadowToken = isLower ? BOX.dense : BOX.light; // Darker shadow for lower cards
+      if (card.type === 'move') {
+        paintMoveCard(buf, cx, cy, card, i + 1);
+      } else if (card.type === 'status') {
+        paintStatusCard(buf, cx, cy, card, i + 1);
+      } else {
+        paintPeopleCard(buf, cx, cy, card, i + 1);
+      }
 
-    if (card.type === 'move') {
-      paintMoveCard(buf, cx, cy, card, i + 1);
-    } else if (card.type === 'status') {
-      paintStatusCard(buf, cx, cy, card, i + 1);
-    } else {
-      paintPeopleCard(buf, cx, cy, card, i + 1);
+      // Apply arc-aware shadow (v3.1)
+      for (let r = 1; r < cH; r++) bPut(buf, cx + cW, cy + r, shadowToken, A.shadow, A.bgDark);
+      for (let c = 1; c <= cW; c++) bPut(buf, cx + c, cy + cH, shadowToken, A.shadow, A.bgDark);
     }
+  });
+}
 
-    // Apply arc-aware shadow (v3.1)
-    for (let r = 1; r < cH; r++) bPut(buf, cx + cW, cy + r, shadowToken, A.shadow, A.bgDark);
-    for (let c = 1; c <= cW; c++) bPut(buf, cx + c, cy + cH, shadowToken, A.shadow, A.bgDark);
-  }
+/**
+ * Tactical Mini-Map (v4.5 Visual Combat Update)
+ * Renders a 3x2 grid of the South Side's 6 core neighborhoods.
+ */
+function renderMiniMap(territories = [], iW) {
+  const sectors = [
+    { id: '1', key: 'WD', name: 'Woodlawn' },
+    { id: '2', key: 'EG', name: 'Englewood' },
+    { id: '3', key: 'CH', name: 'Chatham' },
+    { id: '4', key: 'AG', name: 'Auburn' },
+    { id: '5', key: 'RS', name: 'Roseland' },
+    { id: '6', key: 'HP', name: 'Hyde Pk' }
+  ];
 
-  return bufToLines(buf, A.bgDark);
+  const getSStatus = (name) => {
+    const t = territories.find(tr => tr.name?.toLowerCase().includes(name.toLowerCase()));
+    if (!t) return { icon: '.', color: A.smoke };
+    if (t.contested) return { icon: '!', color: A.red };
+    if (t.owner === 'YOU') return { icon: 'P', color: A.gold };
+    if (t.owner?.startsWith('RIVAL')) return { icon: 'R', color: A.purple };
+    return { icon: '.', color: A.smoke };
+  };
+
+  const lines = [];
+  const sW = Math.floor((iW - 8) / 3); // Sector width
+  
+  // Row 1
+  const r1 = sectors.slice(0, 3).map(s => {
+    const status = getSStatus(s.name);
+    const content = `${A.dim}${s.id}.${A.reset}${A.bold}${status.color}${status.icon}${A.reset} ${A.white}${s.key}${A.reset}`;
+    const pad = sW - visLen(content);
+    return `[ ${content}${' '.repeat(Math.max(0, pad - 2))} ]`;
+  }).join(' ');
+
+  // Row 2
+  const r2 = sectors.slice(3, 6).map(s => {
+    const status = getSStatus(s.name);
+    const content = `${A.dim}${s.id}.${A.reset}${A.bold}${status.color}${status.icon}${A.reset} ${A.white}${s.key}${A.reset}`;
+    const pad = sW - visLen(content);
+    return `[ ${content}${' '.repeat(Math.max(0, pad - 2))} ]`;
+  }).join(' ');
+
+  lines.push(`  ${r1}`);
+  lines.push(`  ${r2}`);
+  
+  return lines;
+}
+
+/**
+ * Render act map (v4 tactical overview)
+ */
+export function renderActMap(state, iW) {
+  return renderMiniMap(state.territories || [], iW).join('\n');
 }
 
 // ── Compact hand for narrow terminals ────────────────────────────
@@ -746,13 +799,14 @@ export function renderWhisper(state) {
 // ══════════════════════════════════════════════════════════════════
 
 export function renderBoard(state, options = {}) {
-  const { shakeX = 0, flash = false } = options;
-  const termW = getW();
-  const termH = process.stdout.rows || 30;
-  const iW = termW - 2;
-  const compact = termW < 70;
-  // Height-constrained: must fit above the fold
-  const tight = termH <= 30;
+  const iW = options.innerWidth || (process.stdout.columns ? Math.min(100, process.stdout.columns - 4) : 76);
+  const rows = process.stdout.rows || 50;
+  
+  // FIX: Stabilize 'tight' detection for v4.5
+  // Tight mode should only trigger if height < 22, giving 80x24 terminals the Premium UI.
+  const tight = rows < 24; 
+  const compact = iW < 60;
+
   const out = [];
 
   // ── Header ──
@@ -884,7 +938,19 @@ export function renderBoard(state, options = {}) {
         out.push(doubleRow(`  ${pfx}${A.crimson}${intentLines[i]}${A.reset}`, iW));
       }
     }
-    out.push(doubleMid(iW));
+      out.push(innerDivider(iW));
+    }
+  }
+
+  // ── Tactical Mini-Map (v4.5 Visual Combat Update) ──
+  if (!tight) {
+    const mapTitle = `  ${A.bold}${A.gold}\u2316 SOUTH SIDE TACTICAL OVERVIEW${A.reset}`;
+    out.push(doubleRow(mapTitle, iW));
+    const mapLines = renderMiniMap(state.territories, iW);
+    for (const ml of mapLines) {
+      out.push(doubleRow(ml, iW));
+    }
+    out.push(innerDivider(iW));
   }
 
   // ── Hand ──
