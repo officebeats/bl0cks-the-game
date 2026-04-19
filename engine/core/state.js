@@ -18,6 +18,9 @@
  * @property {number} heat - Current heat level
  * @property {number} clock - Current clock ticks elapsed
  * @property {number} clockTotal - Total clock ticks for level
+ * @property {number} rivalIntent - Current AI Rival intent progression (0-100)
+ * @property {number} rivalIntentRate - Real-time growth rate for AI intent
+ * @property {number} heatRate - Real-time growth rate for Heat
  * @property {Territory[]} territories
  * @property {Card[]} hand
  * @property {Card[]} deck
@@ -39,6 +42,9 @@ const INITIAL_STATE = Object.freeze({
   heat: 0,
   clock: 0,
   clockTotal: 12,
+  rivalIntent: 0,
+  rivalIntentRate: 5, // 5% per second by default
+  heatRate: 0.1,      // 0.1 heat per second by default
   territories: [],
   hand: [],
   deck: [],

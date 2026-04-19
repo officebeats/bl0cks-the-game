@@ -21,7 +21,7 @@ import { buildSystemPrompt } from '../ai/prompt-builder.js';
 import { createState, updateState, exportState } from './state.js';
 import { PHASES, TurnPhaseRunner } from './phases.js';
 import { resetInfluence, calculateBaseInfluence } from './influence.js';
-import { increaseHeat, decreaseHeat, heatCheckPhase, getHeatThreshold, getActiveModifiers } from './heat.js';
+import { increaseHeat, decreaseHeat, heatCheckPhase, getHeatThreshold, getActiveModifiers, HEAT_CAP } from './heat.js';
 import { createLedger, recordLevelComplete, serializeLedger, getLoyaltyModifier, addGrudge, addDebt, addBurnedBridge, updateReputation, addGhostTerritory, incrementBodyCount, recordAlliance, addAsset } from './ledger.js';
 import { detectCombos, applyCombos } from '../cards/keywords.js';
 import { calculateLevelScore } from './scoring.js';
@@ -118,7 +118,7 @@ export class GameController {
 
     const heatThreshold = getHeatThreshold(heatCarried);
     const heatContext = heatCarried > 0
-      ? `\n\n## Heat Status\nCurrent Heat: ${heatCarried}/20 — "${heatThreshold.name}"\n${heatThreshold.flavor}\n${heatThreshold.modifier ? 'Active modifiers: ' + JSON.stringify(heatThreshold.modifier) : ''}`
+      ? `\n\n## Heat Status\nCurrent Heat: ${heatCarried}/${HEAT_CAP} — "${heatThreshold.name}"\n${heatThreshold.flavor}\n${heatThreshold.modifier ? 'Active modifiers: ' + JSON.stringify(heatThreshold.modifier) : ''}`
       : '';
 
     const systemPrompt = buildSystemPrompt(this.#rom, {
@@ -174,47 +174,61 @@ export class GameController {
       throw new Error('No active session. Call startLevel() first.');
     }
 
-    this.#events.emit('action.sent', { input, turn: this.#turnCount });
-    this.#events.emit('ai.thinking', { action: input });
+    // --- Support Blitz Queuing (Multi-action) ---
+    // Actions can be sent as an array or a string separated by "&&"
+    const actions = Array.isArray(input) 
+      ? input 
+      : input.split('&&').map(a => a.trim()).filter(a => a.length > 0);
 
-    // ── Track action for engine systems ──
-    const upperInput = input.trim().toUpperCase();
+    const fullInput = actions.join(' && ');
+    this.#events.emit('action.sent', { input: fullInput, turn: this.#turnCount, isBlitz: actions.length > 1 });
+    this.#events.emit('ai.thinking', { action: fullInput });
 
-    // Detect War plays for Blitz tracking
-    if (upperInput.includes('WAR') || upperInput.match(/^\d+$/) && this.#currentState?.hand) {
-      const cardIdx = parseInt(upperInput) - 1;
-      const card = this.#currentState.hand?.[cardIdx];
-      if (card?.name?.toUpperCase() === 'WAR' || upperInput.includes('WAR')) {
-        this.#warTurns.push(this.#turnCount);
-        this.#levelStats.usedWar = true;
-        // War generates heat
-        const heatResult = increaseHeat(this.#engineState, 1, 'war');
-        this.#engineState = updateState(this.#engineState, { heat: heatResult.heat });
-        if (heatResult.thresholdCrossed) {
-          this.#events.emit('heat.threshold', heatResult.thresholdCrossed);
+    // --- Track all actions for engine systems ---
+    for (const action of actions) {
+      const upperInput = action.toUpperCase();
+
+      // Detect War plays for Blitz tracking
+      if (upperInput.includes('WAR') || (upperInput.match(/^\d+$/) && this.#currentState?.hand)) {
+        const cardIdx = parseInt(upperInput) - 1;
+        const card = this.#currentState.hand?.[cardIdx];
+        if (card?.name?.toUpperCase() === 'WAR' || upperInput.includes('WAR')) {
+          this.#warTurns.push(this.#turnCount);
+          this.#levelStats.usedWar = true;
+          
+          // Blitzing War generates more heat
+          const heatGain = actions.length > 1 ? 2 : 1;
+          const heatResult = increaseHeat(this.#engineState, heatGain, actions.length > 1 ? 'war_blitz' : 'war');
+          this.#engineState = updateState(this.#engineState, { heat: heatResult.heat });
+          
+          if (heatResult.thresholdCrossed) {
+             this.#events.emit('heat.threshold', heatResult.thresholdCrossed);
+             this.#events.emit('heat.beat', { threshold: heatResult.thresholdCrossed, source: 'war' });
+          }
+          this.#events.emit('heat.changed', { heat: heatResult.heat, source: 'war' });
         }
-        this.#events.emit('heat.changed', { heat: heatResult.heat, source: 'war' });
+      }
+
+      // Detect Intel usage
+      if (upperInput.includes('INTEL')) {
+        this.#levelStats.intelUsed++;
       }
     }
 
-    // Detect Intel usage
-    if (upperInput.includes('INTEL')) {
-      this.#levelStats.intelUsed++;
-    }
-
-    // ── Auto heat tick (+1 per turn) ──
+    // --- Auto heat tick (+1 per turn) ---
     const autoHeat = heatCheckPhase(this.#engineState);
     this.#engineState = updateState(this.#engineState, { heat: autoHeat.heat });
     if (autoHeat.thresholdCrossed) {
       this.#events.emit('heat.threshold', autoHeat.thresholdCrossed);
+      this.#events.emit('heat.beat', { threshold: autoHeat.thresholdCrossed, source: 'time' });
     }
 
-    // ── Influence reset at turn start ──
+    // --- Influence reset at turn start ---
     const influenceReset = resetInfluence(this.#engineState);
     this.#engineState = updateState(this.#engineState, influenceReset);
 
-    // ── Send to AI ──
-    const aiResponse = await this.#adapter.send(input);
+    // --- Send to AI (as batch) ---
+    const aiResponse = await this.#adapter.send(fullInput);
     const state = parseResponse(aiResponse);
 
     // Augment with ROM identity
@@ -283,6 +297,64 @@ export class GameController {
     }
 
     return state;
+  }
+
+  /**
+   * Heartbeat for real-time battle system.
+   * Updates AI intent and heat independently of player actions.
+   * @param {number} ms - Milliseconds since last tick
+   * @returns {object} Updated engine state
+   */
+  tick(ms) {
+    if (!this.#sessionActive || !this.#engineState) return null;
+
+    const eState = this.#engineState;
+    const deltaSeconds = ms / 1000;
+
+    // Accumulate intent and heat
+    const intentGain = eState.rivalIntentRate * deltaSeconds;
+    const heatGain = eState.heatRate * deltaSeconds;
+
+    let nextIntent = (eState.rivalIntent || 0) + intentGain;
+    let nextHeat = (eState.heat || 0) + heatGain;
+
+    // Handle Intent Trigger
+    let intentTriggered = false;
+    if (nextIntent >= 100) {
+      nextIntent = 0; // Reset after trigger
+      intentTriggered = true;
+      this.#events.emit('rival.intent_full', { 
+        level: this.#currentLevel.id,
+        heat: nextHeat 
+      });
+    }
+
+    // Check for Heat Threshold crossings
+    const oldThreshold = getHeatThreshold(eState.heat);
+    const newThreshold = getHeatThreshold(nextHeat);
+    if (oldThreshold.id !== newThreshold.id) {
+      this.#events.emit('heat.threshold', newThreshold);
+      this.#events.emit('heat.beat', { 
+        threshold: newThreshold, 
+        source: 'real_time' 
+      });
+    }
+
+    // Update engine state
+    this.#engineState = updateState(eState, {
+      rivalIntent: nextIntent,
+      // Refactor: Use central constant instead of hardcoded 20 (v4.0 fix)
+      heat: Math.min(nextHeat, HEAT_CAP)
+    });
+
+    // Emit for UI feedback
+    this.#events.emit('engine.heartbeat', {
+      rivalIntent: nextIntent,
+      heat: this.#engineState.heat,
+      intentTriggered
+    });
+
+    return this.getEngineState();
   }
 
   /**

@@ -135,3 +135,29 @@ export async function showAnimatedPrompt(title, subtitle, renderFn) {
     }, 70);
   });
 }
+
+/**
+ * Non-blocking key listener for the Real-Time Battle Loop.
+ * @param {function} onKey - Callback (keyName, char) => void
+ */
+export function listenForKeys(onKey) {
+  process.stdin.setRawMode(true);
+  process.stdin.setEncoding('utf8');
+  process.stdin.resume();
+
+  const listener = (str, key) => {
+    // Standard cleanup handler
+    if (key && key.ctrl && key.name === 'c') {
+      process.stdin.setRawMode(false);
+      process.exit();
+    }
+    onKey(key?.name, str);
+  };
+
+  process.stdin.on('keypress', listener);
+
+  return () => {
+    process.stdin.removeListener('keypress', listener);
+    process.stdin.setRawMode(false);
+  };
+}

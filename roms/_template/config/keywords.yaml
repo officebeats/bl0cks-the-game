@@ -1,0 +1,120 @@
+# Keyword Definitions
+# Keywords are standardized mechanical effects
+
+keywords:
+  # Original Keywords
+  block:
+    icon: shield
+    effect: "Generates Block Points that absorb damage"
+    value: 2
+    duration: "end_of_turn"
+    combo:
+      - keyword: stack
+        bonus: "+2 bonus block"
+        
+  connect:
+    icon: zap
+    effect: "Reveals 1 hidden stat"
+    combo:
+      - keyword: connect
+        bonus: "Reveal 1 additional stat"
+        
+  flip:
+    icon: skull
+    effect: "Triggers betrayal if loyalty differs by 3+"
+    combo:
+      - keyword: snitch
+        bonus: "Preview betrayal before it fires"
+        
+  hustle:
+    icon: zap
+    effect: "Generates +1 Influence immediately"
+    combo:
+      - keyword: tax
+        bonus: "Net positive influence turn"
+        
+  fortify:
+    icon: shield
+    effect: "Block immune to War for 1 turn"
+    combo:
+      - keyword: peace
+        bonus: "Unbreakable shared territory"
+        
+  shadow:
+    icon: eye_off
+    effect: "Hidden play, no Heat generated"
+    combo:
+      - keyword: war
+        bonus: "Surprise attack - no preparation"
+        
+  rally:
+    icon: users
+    effect: "+1 loyalty to ALL allies in territory"
+    combo:
+      - keyword: rally
+        bonus: "+2 loyalty each instead"
+        
+  # v4.0 Keywords
+  echo:
+    icon: copy
+    effect: "Card replays itself next turn for free"
+    duration: "next_turn"
+    stack: false
+    upgraded_replays: 2
+    
+  momentum:
+    icon: sparkles
+    effect: "Costs 1 less for each consecutive turn played"
+    cost_reduction: 1
+    max_reduction: 3
+    
+  linger:
+    icon: moon
+    effect: "Effect persists after card goes to discard"
+    duration: "end_of_next_turn"
+    
+  affliction:
+    icon: skull
+    effect: "Negative effect applied to your cards"
+    types:
+      - exhausted_soul: "Costs +1 influence"
+      - cracked_loyalty: "Loyalty decays -1/turn"
+      - marked_for_betrayal: "Betrayal threshold reduced"
+      
+  transform:
+    icon: sparkle
+    effect: "Alter a card by adding/removing keywords"
+    can_add: true
+    can_remove: true
+    
+  wax:
+    icon: clock
+    effect: "Temporary - melts away after N combats"
+    default_duration: 3
+    reminder_at: 1
+    
+  plating:
+    icon: heart
+    effect: "Block at end of turn, reduced by unblocked damage"
+    value_type: "persistent_block"
+    reduction_per_hit: 1
+    
+  vigor:
+    icon: sword
+    effect: "Next attack deals +X additional damage"
+    stack: true
+    consumed_on: "attack_play"
+    
+# Combo Chains
+combos:
+  - name: "Block Fortress"
+    keywords: [block, fortify, rally]
+    effect: "Impenetrable territory defense"
+    
+  - name: "Silent War"
+    keywords: [shadow, war]
+    effect: "Overwhelming surprise attack"
+    
+  - name: "Loyalty Machine"
+    keywords: [rally, connect]
+    effect: "Build unstoppable allies"

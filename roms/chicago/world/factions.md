@@ -1,33 +1,33 @@
-# BL0CKS World File: Factions
+# BL0CKS World File: Factions (Vibe-Polished v1.0)
 
-**Instructions for Game Engine:** This file outlines the power players in South Side, Chicago. When generating new Person Cards, assigning true motives, or narrating Event outcomes, keep these faction rules consistent.
+**Instructions for Game Engine:** This file defines the cultural and mechanical identity of the South Side's power players. When narrating Event outcomes or generating NPC motives, lean into the "Street Noir" aesthetic: high-contrast tension, grounded geography, and professional-grade paranoia.
 
 ## 1. The Governors (Player Faction)
-- **Role:** The incumbents in Woodlawn.
-- **Vibe:** Old school. Organized. Prefer quiet business over loud violence if it pays, but will hit back ten times harder if crossed.
-- **Internal Weakness:** An aging leadership structure being pushed by greedy, impatient younger street lieutenants. 
-- **Engine rule:** Any "Informant" or "Enforcer" character aligned with the Governors has a 50% chance of secretly resenting the leadership (hidden motive).
+- **Role:** The silver-haired incumbents of Woodlawn.
+- **Vibe:** **Institutional.** Old school muscle that prefers the board room to the back alley. They move with the heavy weight of tradition, claiming a legacy that spans fifty years of street history.
+- **Internal Weakness:** A generational fracture. The "Old Heads" want quiet profit; the young lieutenants want loud expansion.
+- **Engine rule:** Governors NPCs have a 50% chance of a **Generation Gap** hidden motive. They may intentionally sabotage old-guard orders to prove a point.
 
 ## 2. The Lords (Rival / Aggro)
-- **Role:** The expansionists holding Englewood.
-- **Vibe:** Militant, highly disciplined, paranoid. Heavily armed. They operate like a paramilitary organization.
-- **Strategy:** They don't respect the old borders. They are actively pushing East into Auburn Gresham and Woodlawn.
-- **Engine rule:** Wars fought against the Lords always incur heavier losses to your own character's loyalty if you lose.
+- **Role:** The paramilitary expansionists of Englewood.
+- **Vibe:** **Rigor.** They don't have "members"; they have personnel. Heavily armed, tactically disciplined, and famously paranoid. Their corners are monitored like DMZs.
+- **Strategy:** Blitzkrieg. They ignore historical "Understandings" and push East into Auburn Gresham with overwhelming Heat.
+- **Engine rule:** Losing a War against the Lords triggers a **Dread Check**. Your active characters lose an additional 2 Loyalty from the sheer trauma of the defeat.
 
 ## 3. The Stones (Rival / Wealth)
-- **Role:** The money-makers anchored in Roseland.
-- **Vibe:** Flashy, political, deeply connected. They own clubs, barbershops, and transit routes. Less likely to shoot you on the corner; more likely to buy your best lieutenants.
-- **Strategy:** They treat territory wars like corporate mergers. They prefer hostile takeovers via bribery.
-- **Engine rule:** Characters with high greed or ambition in their hidden motive are highly susceptible to being flipped by the Stones.
+- **Role:** The Silk Hand of Roseland.
+- **Vibe:** **Veneer.** Deeply political, flashy, and professionally groomed. They own the barbershops where the aldermen get their fades and the clubs where the laundry gets done.
+- **Strategy:** Acquisition. Why kill an Enforcer when you can out-pay his loyalty? They treat territory like a hostile corporate takeover.
+- **Engine rule:** NPCs with **Greed** or **Ambition** hidden motives are twice as likely to Flip if a Stone character is in the same block.
 
 ## 4. Chicago Police Department (CPD)
-- **Role:** The unpredictable hammer (Neutral Antagonist).
-- **Vibe:** Underfunded but overwhelming force. Raids, informants, wiretaps, and plainclothes task forces.
-- **Strategy:** They don't hold territory; they freeze it. 
-- **Engine rule:** The CPD cannot be "defeated." Too much noise (War cards) increases the likelihood of a CPD Raid Event. You can only pay them off, avoid them, or frame a rival to redirect them.
+- **Role:** The Blue Pressure (Neutral Antagonist).
+- **Vibe:** **The Meat-Grinder.** Underfunded task forces with overwhelming technology. They don't respect the board state; they freeze it with raids, long-range audio surveillance, and asset forfeitures.
+- **Strategy:** Disruption. They exist to punish "Noise" (excessive War plays).
+- **Engine rule:** **CPD is the Engine's Hand.** They cannot be defeated, only redirected. Excessive Heat triggers "Blue-Out" events that lock territories for 3 turns.
 
-## 5. The Commission (Hidden Meta-Faction)
-- **Role:** The strings pulling the city. Unseen bosses, dirty politicians, and developers who let the street crews fight while they buy up the ruins.
-- **Vibe:** Invisible, chilling, absolute power.
-- **Strategy:** The Commission doesn't want peace; they want contained chaos. If the player gets too powerful too fast, The Commission creates sudden, inexplicable betrayals.
-- **Engine rule:** **Do NOT** reveal The Commission openly in Act I. Only hint at them implicitly through the hidden motives of seemingly loyal characters (e.g., "Reporting to someone higher up," or "Paid by a ghost developer").
+## 0. The Commission (The Ghost Faction)
+- **Role:** The Strings. The developers and ghost-politicians who let the street crews fight for crumbs while they buy the whole loaf.
+- **Vibe:** Invisible, chilling, absolute. 
+- **Strategy:** Managed Chaos. 
+- **Engine rule:** **NO DIRECT REVEAL.** Hint at them via "Developer Shell Companies" and "Anonymous Wire-Transfers".

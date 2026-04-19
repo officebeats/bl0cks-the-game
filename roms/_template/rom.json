@@ -1,0 +1,28 @@
+{
+  "id": "my_world",
+  "name": "My Awesome World",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "A brief description of your game world",
+  "engine_version": "4.0.0",
+  
+  "settings": {
+    "starting_influence": 3,
+    "max_influence": 6,
+    "hand_size": 5,
+    "max_heat": 20,
+    "max_quests": 2,
+    "companions_enabled": true,
+    "quests_enabled": true,
+    "forging_enabled": true,
+    "enchantments_enabled": true,
+    "dynamic_intent_enabled": true
+  },
+  
+  "contact": {
+    "website": "https://example.com",
+    "discord": "https://discord.gg/example"
+  },
+  
+  "license": "MIT"
+}

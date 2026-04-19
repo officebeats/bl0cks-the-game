@@ -156,6 +156,11 @@ export class BL0CKS {
     return this.#controller.sendAction(input);
   }
 
+  tick(ms) {
+    if (!this.#controller) return null;
+    return this.#controller.tick(ms);
+  }
+
   getState() {
     return this.#controller?.getState() || null;
   }

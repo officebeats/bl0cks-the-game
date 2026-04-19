@@ -1,0 +1,64 @@
+# Accessibility Configuration (v4.0)
+# Settings to make the game playable for everyone
+
+accessibility:
+  # Motion & Animation Controls
+  motion:
+    reduce_motion: false          # Disable/minimize animations
+    animation_speed: 1.0          # 0.5 = half speed, 2 = double speed
+    disable_particles: false      # Disable particle effects
+    disable_screen_shake: false   # Disable screen shake
+    flash_intensity: "normal"     # normal, reduced, none
+    
+  # Color Blind Support
+  colorblind:
+    mode: "none"                 # none, deuteranopia, protanopia, tritanopia
+    patterns_enabled: true      # Show patterns alongside colors
+    icons_for_colors: true       # Always show icons with color info
+    high_contrast: false          # Increase contrast
+    
+  # Phobia Mode
+  phobia_mode:
+    enabled: false                # Replace triggering content
+    replacements:
+      spider: "mechanical_web"   # Spider alternatives
+      insect_swarm: "glitch_particles"
+      blood: "digital_corruption"
+      skull: "digital_skull"
+      ghost: "shadow_figure"
+      
+  # Screen Reader Support
+  screen_reader:
+    enabled: false               # Enhanced screen reader support
+    announce_intents: true        # Announce enemy intents
+    announce_combat: true         # Announce combat results
+    announce_phase: true          # Announce turn phases
+    announce_rewards: true        # Announce rewards/penalties
+    verbose_mode: false           # Extra detailed announcements
+    
+  # Text Size
+  text:
+    size: "normal"               # normal, large, extra_large
+    font_override: null         # Override font family
+    line_height: 1.5            # Line height multiplier
+    
+  # Audio
+  audio:
+    sound_effects_volume: 1.0    # 0-1
+    music_volume: 0.5            # 0-1
+    announce_vocally: false     # Text-to-speech for narration
+    mono_audio: false             # Convert stereo to mono
+    
+  # Keyboard/Touch
+  input:
+    key_repeat_delay: 0          # Delay before key repeat
+    double_tap_time: 300         # ms for double-tap detection
+    long_press_time: 500         # ms for long-press detection
+    swipe_threshold: 100         # px for swipe detection
+    touch_targets_min: 44        # Minimum touch target size (px)
+    
+  # Focus Management
+  focus:
+    visible_focus: true          # Show focus indicators
+    focus_on_hover: false         # Auto-focus on hover
+    trap_in_modals: true         # Trap focus in modals

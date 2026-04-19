@@ -97,15 +97,15 @@ let A = {
 // ── Faction Color Map ────────────────────────────────────────────
 // Mutable — ROM themes can override via applyTheme()
 let FACTION_STYLE = {
-  'governors':  { fg: A.blue,   bg: A.bgBlue,   accent: '\x1b[38;2;80;140;220m' },
-  'lords':      { fg: A.gold,   bg: A.bgGold,   accent: '\x1b[38;2;255;210;60m' },
-  'stones':     { fg: A.red,    bg: A.bgRed,     accent: '\x1b[38;2;240;70;60m'  },
-  'cpd':        { fg: A.slate,  bg: A.bgSlate,   accent: A.gray  },
-  'law':        { fg: A.slate,  bg: A.bgSlate,   accent: A.gray  },
-  'commission': { fg: A.purple, bg: A.bgSlate,   accent: A.purple },
-  'neutral':    { fg: A.teal,   bg: A.bgSlate,   accent: A.teal  },
-  'you':        { fg: A.green,  bg: A.bgGreen,   accent: A.green },
-  'default':    { fg: A.chalk,  bg: A.bgSlate,   accent: A.chalk },
+  'governors':  { fg: A.blue,   bg: A.bgBlue,   shade: A.navy,   accent: '\x1b[38;2;80;140;220m' },
+  'lords':      { fg: A.gold,   bg: A.bgGold,   shade: A.amber,  accent: '\x1b[38;2;255;210;60m' },
+  'stones':     { fg: A.red,    bg: A.bgRed,    shade: A.crimson, accent: '\x1b[38;2;240;70;60m'  },
+  'cpd':        { fg: A.slate,  bg: A.bgSlate,  shade: A.gray,    accent: A.gray  },
+  'law':        { fg: A.slate,  bg: A.bgSlate,  shade: A.gray,    accent: A.gray  },
+  'commission': { fg: A.purple, bg: A.bgSlate,  shade: A.purple,  accent: A.purple },
+  'neutral':    { fg: A.teal,   bg: A.bgSlate,  shade: A.teal,    accent: A.teal  },
+  'you':        { fg: A.green,  bg: A.bgGreen,  shade: A.emerald, accent: A.green },
+  'default':    { fg: A.chalk,  bg: A.bgSlate,  shade: A.smoke,   accent: A.chalk },
 };
 
 /**
@@ -369,15 +369,18 @@ function paintPeopleCard(buf, cx, cy, card, idx) {
     bPut(buf, cx + w - 1, cy + r, BOX.sv, border, cardBg);
   }
 
-  // Row 1: Index + Name
-  const name = (card.name || '???').substring(0, inner - 4);
+  // Row 1: Index + Icon + Name
+  const name = (card.name || '???').substring(0, inner - 5);
   bStr(buf, cx + 1, cy + 1, ` ${idx}`, A.gold, cardBg);
   bPut(buf, cx + 3, cy + 1, '\u00b7', A.smoke, cardBg);
-  bStr(buf, cx + 4, cy + 1, name.toUpperCase().padEnd(inner - 4), accent + A.bold, cardBg);
+  bStr(buf, cx + 4, cy + 1, '\ud83d\udc64', accent, cardBg); // 👤
+  bStr(buf, cx + 6, cy + 1, name.toUpperCase().padEnd(inner - 5), accent + A.bold, cardBg);
 
-  // Row 2: Role
-  const role = (card.role || '').substring(0, inner - 3);
-  bStr(buf, cx + 1, cy + 2, `  ${role.padEnd(inner - 3)}`, A.chalk, cardBg);
+  // Row 2: Textured Header / Role
+  const role = (card.role || '').substring(0, inner - 6);
+  bStr(buf, cx + 1, cy + 2, ' ', '', cardBg);
+  for (let i = 0; i < 4; i++) bPut(buf, cx + 2 + i, cy + 2, BOX.light, style.shade, cardBg);
+  bStr(buf, cx + 7, cy + 2, role.padEnd(inner - 6), A.chalk, cardBg);
 
   // Row 3: Faction
   const faction = (card.faction || '').substring(0, inner - 3);
@@ -436,10 +439,16 @@ function paintMoveCard(buf, cx, cy, card, idx) {
   bStr(buf, cx + 4, cy + 1, '\u2694 ', accent, cardBg);
   bStr(buf, cx + 6, cy + 1, name.toUpperCase().padEnd(inner - 6), accent + A.bold, cardBg);
 
-  // Rows 2-5: Description word-wrapped
+  // Rows 2-5: Description word-wrapped with texture header
   const desc = card.description || '';
   const descLines = wordWrap(desc, inner - 3);
-  for (let i = 0; i < 4; i++) {
+  
+  // Textured Header in Row 2
+  bStr(buf, cx + 1, cy + 2, ' ', '', cardBg);
+  for (let i = 0; i < 4; i++) bPut(buf, cx + 2 + i, cy + 2, BOX.light, A.crimson, cardBg);
+  bStr(buf, cx + 6, cy + 2, (descLines[0] || '').padEnd(inner - 5), A.chalk, cardBg);
+
+  for (let i = 1; i < 4; i++) {
     const text = (descLines[i] || '').padEnd(inner - 3);
     bStr(buf, cx + 1, cy + 2 + i, `  ${text}`, A.chalk, cardBg);
   }
@@ -479,16 +488,17 @@ function paintStatusCard(buf, cx, cy, card, idx) {
     bPut(buf, cx + w - 1, cy + r, BOX.sv, border, cardBg);
   }
 
-  // Row 1: Index + Fire + Name
+  // Row 1: Index + Icon + Name
   const name = (card.name || '???').substring(0, inner - 6);
   bStr(buf, cx + 1, cy + 1, ` ${idx}`, A.gold, cardBg);
   bPut(buf, cx + 3, cy + 1, '\u00b7', A.smoke, cardBg);
-  bStr(buf, cx + 4, cy + 1, '\ud83d\udd25', accent, cardBg); // 🔥
+  bStr(buf, cx + 4, cy + 1, '\ud83d\udea8', accent, cardBg); // 🚨
   bStr(buf, cx + 6, cy + 1, name.toUpperCase().padEnd(inner - 6), accent + A.bold, cardBg);
 
-  // Row 2: DEAD DRAW label (dim, makes it clear this card is cursed)
-  const deadLabel = 'DEAD DRAW'.padEnd(inner - 3);
-  bStr(buf, cx + 1, cy + 2, `  ${deadLabel}`, A.crimson + A.dim, cardBg);
+  // Row 2: DEAD DRAW label with textured background
+  bStr(buf, cx + 1, cy + 2, ' ', '', cardBg);
+  for (let i = 0; i < 4; i++) bPut(buf, cx + 2 + i, cy + 2, BOX.light, border, cardBg);
+  bStr(buf, cx + 7, cy + 2, 'DEAD DRAW'.padEnd(inner - 6), A.crimson + A.dim, cardBg);
 
   // Rows 3-5: Description (dimmed)
   const desc = card.description || 'Cannot be played. Burn to remove.';
@@ -576,6 +586,8 @@ function renderFannedHand(cards, innerWidth) {
     const cx = startX + i * step;
     const cy = arcOffsets[i];
     const card = cards[i];
+    const isLower = cy > 0;
+    const shadowToken = isLower ? BOX.dense : BOX.light; // Darker shadow for lower cards
 
     if (card.type === 'move') {
       paintMoveCard(buf, cx, cy, card, i + 1);
@@ -584,6 +596,10 @@ function renderFannedHand(cards, innerWidth) {
     } else {
       paintPeopleCard(buf, cx, cy, card, i + 1);
     }
+
+    // Apply arc-aware shadow (v3.1)
+    for (let r = 1; r < cH; r++) bPut(buf, cx + cW, cy + r, shadowToken, A.shadow, A.bgDark);
+    for (let c = 1; c <= cW; c++) bPut(buf, cx + c, cy + cH, shadowToken, A.shadow, A.bgDark);
   }
 
   return bufToLines(buf, A.bgDark);
@@ -729,7 +745,8 @@ export function renderWhisper(state) {
 //  FULL BOARD RENDER
 // ══════════════════════════════════════════════════════════════════
 
-export function renderBoard(state) {
+export function renderBoard(state, options = {}) {
+  const { shakeX = 0, flash = false } = options;
   const termW = getW();
   const termH = process.stdout.rows || 30;
   const iW = termW - 2;
@@ -796,6 +813,15 @@ export function renderBoard(state) {
     const heatThresholdName = eng.heatThreshold || '';
     const heatLabel = `${A.ember}\u2668 HEAT${A.reset} ${heatBar} ${heatColor}${heat}/${heatMax}${A.reset}`;
 
+    // Rival Intent (v4.0)
+    const intent = eng.rivalIntent ?? 0;
+    const intentBarW = compact ? 6 : 8;
+    const intentFilled = Math.round((intent / 100) * intentBarW);
+    const intentEmpty = intentBarW - intentFilled;
+    const intentColor = intent >= 80 ? A.red : intent >= 50 ? A.gold : A.amber;
+    const intentBar = `${intentColor}${BOX.full.repeat(intentFilled)}${A.smoke}${BOX.light.repeat(intentEmpty)}${A.reset}`;
+    const intentLabel = `${A.rust}\u26a1 RIVAL${A.reset} ${intentBar} ${Math.round(intent)}%${A.reset}`;
+
     // Phase/Turn
     const turn = eng.turn ?? '';
     const phase = eng.phase ? eng.phase.toUpperCase() : '';
@@ -804,7 +830,7 @@ export function renderBoard(state) {
 
     // Compose HUD line
     const hudLeft = `  ${infLabel}`;
-    const hudMid = `${heatLabel} ${heatColor}${heatThresholdName}${A.reset}`;
+    const hudMid = `${heatLabel} ${intentLabel}`;
     const hudRight = `${turnLabel} ${phaseLabel} `;
     const hudGap1 = Math.max(1, Math.floor((iW - visLen(hudLeft) - visLen(hudMid) - visLen(hudRight)) / 2));
     const hudGap2 = Math.max(1, iW - visLen(hudLeft) - visLen(hudMid) - visLen(hudRight) - hudGap1);
@@ -1275,5 +1301,19 @@ export function renderActMap(romInfo, currentLevelId) {
 
   out.push(doubleRow('', iW));
   out.push(doubleBot(iW));
-  return out.join('\n');
+  let result = out.join('\n');
+
+  // Apply shake offset (v4.0 intensity)
+  if (shakeX !== 0) {
+    const space = ' '.repeat(Math.abs(shakeX));
+    result = result.split('\n').map(line => space + line).join('\n');
+  }
+
+  // Apply full-screen flash (v4.0 intensity)
+  if (flash) {
+    result = `\x1b[7m${result}\x1b[27m`;
+  }
+
+  return result;
+
 }
