@@ -10,7 +10,7 @@
 
 import { A, renderBoard, renderWhisper, renderNarrative, renderWin, renderLoss, renderHelp } from '../lib/renderer.js';
 import { ask, clear, listenForKeys } from '../lib/input.js';
-import { saveSession, loadConfig, incrementRequestCount } from '../lib/menus.js';
+import { saveSession, loadConfig } from '../lib/menus.js';
 import {
   typewrite, typewriteLines, sleep,
   getPromptNarrator, gradientText, GRADIENTS,

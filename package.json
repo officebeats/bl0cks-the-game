@@ -10,6 +10,9 @@
     "platforms/web",
     "cloud"
   ],
+  "bin": {
+    "bl0cks": "platforms/cli/bin/bl0cks.js"
+  },
   "scripts": {
     "start": "node platforms/cli/bin/bl0cks.js",
     "play": "node platforms/cli/bin/bl0cks.js",
